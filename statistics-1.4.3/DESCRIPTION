@@ -1,0 +1,11 @@
+Name: statistics
+Version: 1.4.3
+Date: 2021-12-03
+Author: various authors
+Maintainer: Octave-Forge community <maintainers@octave.org>
+Title: Statistics
+Description: Additional statistics functions for Octave.
+Categories: Statistics
+Depends: octave (>= 4.0.0), io (>= 1.0.18)
+License: GPLv3+, public domain
+Url: http://octave.sf.net

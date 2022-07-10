@@ -1,0 +1,8 @@
+Kernel smoothing
+Empirical CDF using scipy:
+
+https://stackoverflow.com/questions/47417986/using-scipy-gaussian-kernel-density-estimation-to-calculate-cdf-inverse
+
+using scikit-learn with optimal bandwidth selection
+
+https://jakevdp.github.io/PythonDataScienceHandbook/05.13-kernel-density-estimation.html

@@ -1,0 +1,142 @@
+statistics >> Statistics
+Distributions
+ anderson_darling_cdf
+ bbscdf bbsinv bbspdf bbsrnd
+ betastat
+ binostat binotest
+ burrcdf burrinv burrpdf burrrnd
+ cdf
+ chi2stat
+ cl_multinom
+ copulacdf copulapdf copularnd
+ datasample
+ expfit explike expstat
+ fstat
+ gamlike
+ gamstat
+ geostat
+ gevcdf gevfit gevfit_lmom gevinv gevlike gevpdf gevrnd gevstat
+ gmdistribution
+ gpcdf gpinv gppdf gprnd
+ hygestat
+ iwishpdf iwishrnd
+ jsucdf
+ jsupdf
+ lognstat
+ mnpdf mnrnd
+ mvnpdf mvnrnd mvncdf
+ mvtcdf mvtpdf mvtrnd
+ nakacdf nakainv nakapdf nakarnd
+ nbinstat
+ ncx2pdf
+ normalise_distribution
+ normstat
+ pdf
+ poisstat
+ qrandn
+ random
+ randsample
+ raylcdf raylinv raylpdf raylrnd raylstat
+ tricdf triinv tripdf trirnd
+ tstat
+ unidstat
+ unifstat
+ vmpdf vmrnd
+ wblstat
+ wishpdf wishrnd
+Descriptive statistics
+ combnk
+ dcov
+ geomean
+ harmmean
+ jackknife
+ nanmax
+ nanmean
+ nanmedian
+ nanmin
+ nanstd
+ nansum
+ nanvar
+ trimmean
+ tabulate
+Experimental design
+ fullfact ff2n
+Regression
+ anova1
+ anovan
+ canoncorr
+ crossval
+ monotone_smooth
+ pca
+ pcacov
+ pcares
+ plsregress
+ princomp
+ regress
+ regress_gp
+ stepwisefit
+Plots
+ boxplot
+ confusionchart
+ dendrogram
+ gscatter
+ histfit
+ hist3
+ normplot
+ repanova
+ silhouette
+ violin
+ wblplot
+Models
+ hmmestimate 
+ hmmgenerate 
+ hmmviterbi
+ mhsample
+ slicesample
+Hypothesis testing
+ anderson_darling_test
+ kruskalwallis
+ runstest
+ signtest
+ ttest
+ ttest2
+ vartest
+ vartest2
+ ztest
+Fitting
+ fitgmdist
+ gamfit
+Clustering
+ cluster
+ clusterdata
+ cmdscale
+ cophenet
+ evalclusters
+ inconsistent
+ kmeans
+ linkage
+ mahal
+ optimalleaforder
+ pdist
+ pdist2
+ squareform
+Reading and Writing
+ caseread
+ casewrite
+ tblread
+ tblwrite
+Cvpartition (class of set partitions for cross-validation, used in crossval)
+ @cvpartition/cvpartition
+ @cvpartition/display
+ @cvpartition/get 
+ @cvpartition/repartition
+ @cvpartition/set
+ @cvpartition/test
+ @cvpartition/training
+Categorical data
+ grp2idx
+Classification Performance Evaluation
+ confusionchart
+ confusionmat
+Other
+ sigma_pts
