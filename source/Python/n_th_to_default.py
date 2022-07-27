@@ -4,6 +4,7 @@
 
 from enum import Enum
 import numpy as np
+import pandas as pd
 import scipy as sc
 from numpy import matlib
 from scipy.stats import norm
@@ -12,6 +13,19 @@ Created on Tue Jul 5 18:15:55 2022
 
 @author: stefanmangold
 """
+path = 'data/default_basket_data.xlsx'
+sheet_name = 'ESTR'
+
+def parse_yield_curve_from_excel(path, tab):
+    """
+    This function reads in yield curve data from an excel sheet
+    path:           string (location of the Excel workbook relative to script location)
+    sheet_name:     string (name of sheet in Excel workbook)
+    """
+    yield_curve_frame = pd.read_excel(path, sheet_name = tab, index_col=0, parse_dates=True)
+    return yield_curve_frame
+    
+
 
 class ModelType(Enum):
     MONTE_CARLO = 1
