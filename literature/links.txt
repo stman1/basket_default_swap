@@ -6,3 +6,8 @@ https://stackoverflow.com/questions/47417986/using-scipy-gaussian-kernel-density
 using scikit-learn with optimal bandwidth selection
 
 https://jakevdp.github.io/PythonDataScienceHandbook/05.13-kernel-density-estimation.html
+
+
+Statsmodels documentation for kernel density estimation
+
+https://www.statsmodels.org/dev/examples/notebooks/generated/kernel_density.html
