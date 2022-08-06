@@ -5,20 +5,21 @@ library(dplyr) # Dataframe manipulation package
 library(zoo) # Dataframe manipulation package
 library(ks) # kernel smoothing package, alternative to MATLAB ksdensity function
 library(psych) # to plot nice scatterplot matrices
+library(here)
 
 # set path to data
 
-data.path <- file.path(here(), 'data')
+data.path <- file.path(here(), '/../../data')
 # read in Excel file, tab CDS_spreads_history into R dataframe
 cds_spread_data=read_excel(file.path(data.path, 'default_basket_data.xlsx'),
                            'CDS_spreads_history',
                            range = 'E21:N1853')
 
 # count missing values
-missing_values <- cds_spread_data %>% select(is.numeric) %>%
+missing_values <- cds_spread_data %>% select(where(is.numeric)) %>%
   summarise_all(list(~(sum(is.na(.)))))
 
-# Drop Banco Santander, Standard Chartered, Danske Bank
+# Drop Banco Santander, Standard Chartered, Danske Bank: too many missing values
 cds_spread_data <- subset(cds_spread_data, select = -c(`Banco Santander`, `Standard Chartered`, `Danske Bank`))
 
 #interpolate missing values for all columns
@@ -36,14 +37,19 @@ cds_spread_data <- cds_spread_data %>%
 
 # compute returns
 cds_spread_data <- cds_spread_data %>%
-  mutate(across(is.numeric, list(ret = ~(./lag(.) - 1))))
+  mutate(across(is.numeric, list(ret = ~(./lead(.) - 1))))
 
+# Remove first data point (row) 
+cds_spread_data <- head(cds_spread_data,-1)
+
+# display data frame
 cds_spread_data
+
 
 
 # scatter plot
 
-pairs.panels(cds_spread_data[,2:6], 
+pairs.panels(cds_spread_data[,8:12], 
              method = "pearson", # correlation method
              hist.col = "#00AFBB",
              density = TRUE,  # show density plots
@@ -53,11 +59,13 @@ pairs.panels(cds_spread_data[,2:6],
 
 # compute empirical CDF of the CDS spread return series
 
-fhat_credit_suisse <- pseudo.uniform(cds_spread_data$`Credit Suisse`)
+#fhat_credit_suisse <- pseudo.uniform(unlist(cds_spread_data[, 2]))
+
+fhat_credit_suisse <- kcde(unlist(cds_spread_data[, 8]))
+predict(fhat_credit_suisse, x=as.matrix(cds_spread_data[, 8]))
 
 
-plot(fhat_credit_suisse, ylab="Distribution function", add=FALSE, drawpoints=FALSE,
-     col.pt=2, jitter=FALSE, alpha=1)
+plot(fhat_credit_suisse, ylab="CDF")
 
 histde(fhat_credit_suisse)
 plot(histde(fhat_credit_suisse))
@@ -65,7 +73,7 @@ plot(histde(fhat_credit_suisse))
 # Functions
 pseudo.uniform = function(X){
   Fhat <- kcde(X)
-  predict(Fhat, x=X)
+  predict(Fhat, x=as.matrix(X))
 }
 
 
