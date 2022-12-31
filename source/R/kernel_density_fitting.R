@@ -1,79 +1,120 @@
-# Load cds spreads from Excel sheet
+# Import R packages
 
 library(readxl) # Excel reader package
-library(dplyr) # Dataframe manipulation package
-library(zoo) # Dataframe manipulation package
-library(ks) # kernel smoothing package, alternative to MATLAB ksdensity function
+library(dplyr) # Dataframe package
+library(zoo) # Another Dataframe package
+library(ks) # kernel smoothing package, alternative to MATLAB's ksdensity function
 library(psych) # for plotting scatterplot matrices with uniforms on the diagonal
-library(here)
+library(here) # current working directory
+
+# Global variable values
+
+data.set = "retail"
+
+data.path <- switch(data.set, 
+                    "retail" = file.path(here(), '/../../../CQF/Project/data/Retail'), 
+                    "banks" = file.path(here(), '/../../../CQF/Project/data/Banks'), 
+                    "automotive" = file.path(here(), '/../../../CQF/Project/data/Automotive'))
+
+range.spreads_history <- switch(data.set,
+                     "retail" = 'E21:J2104', 
+                     "banks" = 'E21:N1975', 
+                     "automotive" = 'E21:J2104')
+
+range.entities <- switch(data.set,
+                         "retail" = 'A1:B5', 
+                         "banks" = 'A1:B9', 
+                         "automotive" = 'A1:B5')
+
+
+excel.file <- 'CDS_spreads.xlsx'
+
+sheet.spreads_history <- 'CDS_spreads_history'
+
+sheet.entities <- 'Entities'
+
+max.datapoints <- 500 # for example: 2 years daily observations on business days is approximately 500 observations
+
+zero.cutoff <- 0.001 # returns / differences smaller than this threshold value are considered to be zero
 
 # Function definitions
 
 pseudo.uniform = function(X, bw_parameter){
-  Fhat <- kcde(unlist(X), h = bw_parameter)
-  predict(Fhat, x=as.matrix(X))
+  empirical_cdf <- kcde(unlist(X), h = bw_parameter)
+  predict(empirical_cdf, x=X)
 }
 
 empirical.cdf = function(X, bw_parameter){
-  Fhat <- kcde(unlist(X), h = bw_parameter)
-  return(Fhat)
+  empirical_cdf <- kcde(unlist(X), h = bw_parameter)
+  return(empirical_cdf)
 }
 
-# set path to data
-data.path <- file.path(here(), '/../../data')
+# load cds spreads time series from Excel sheet CDS_spreads_history into R dataframe
+cds.spread = read_excel(file.path(data.path, excel.file),
+                           sheet.spreads_history,
+                           range = range.spreads_history)
 
-# read in Excel file, tab CDS_spreads_history into R dataframe
-cds.spread = read_excel(file.path(data.path, 'default_basket_data.xlsx'),
-                           'CDS_spreads_history',
-                           range = 'E21:N1853')
+# load entity names from Excel sheet 'Entities'  
+cds.entities = read_excel(file.path(data.path, excel.file),
+                        sheet.entities,
+                        range = range.entities)
 
-# Define timestamp column as row index
-cds.spread <- as.data.frame(cds.spread) # convert from tibble to data.frame
+# Make the date column the data.frame row index
+cds.spread <- as.data.frame(cds.spread) # convert from tibble to object of type data.frame
 row.names(cds.spread) <- cds.spread$Timestamp
-cds.spread <- cds.spread[,-1] 
+cds.spread <- cds.spread[,-1] # remove index column, dataframe is now indexed by date
+
+
 
 # count missing values
 missing_values <- cds.spread %>% #select(where(is.numeric)) %>%
   summarise_all(list(~(sum(is.na(.)))))
 
-# Drop Banco Santander, Standard Chartered, Danske Bank: too many missing values
-cds.spread <- subset(cds.spread, select = -c(`Banco Santander`, `Standard Chartered`, `Danske Bank`))
 
-#interpolate missing values for all columns
+#----------------------------------------------------------------------------------------------------#
+#----------------------------------------------------------------------------------------------------#
+#------------Individual data adjustments - change for each data set----------------------------------#
+
+# Remove first 70 data points (Ahold data missing) 
+cds.spread <- tail(cds.spread,-70)
+
+# Linear interpolation of missing values for all columns
+
 cds.spread <- cds.spread %>%
-  mutate_at(.vars = c('Credit Suisse', 'BNP', 'Deutsche Bank', 'Societe Generale', 'HSBC', 'UBS'), list(~na.approx(.)))
+  mutate_at(.vars = colnames(cds.spread), list(~na.approx(.)))
 
-# show cds spread dataframe
-#cds.spread 
+# compute n-th day returns
+frequency_n_days <- 5
 
-# plot with gaps
-#plot(cds.spread$`Level Banco Santander`, type='o', pch=10, col='steelblue', xlab='Time Stamp', ylab='Price')
+cds.spread <- cds.spread %>%
+  slice(which(row_number() %% frequency_n_days == 1))
 
-# plot without gaps
-#plot(cds.spread$`Level Banco Santander`, type='o', pch=10, col='chocolate4', xlab='Time Stamp', ylab='Price')
-
-# compute returns
-cds.returns <- cds.spread %>%
-  mutate(across(is.numeric, list(ret = ~(./lead(.) - 1))))
+cds.diffs <- cds.spread %>%
+  mutate(across(is.numeric, list(diff = ~(. - lead(.)))))
 
 # remove levels
-cds.returns <- subset(cds.returns, select = -c(`Credit Suisse`, `BNP`, `Deutsche Bank`, `Societe Generale`, `HSBC`, `UBS`))
+cds.diffs <- subset(cds.diffs, select = -c(1:num.entities))
+
 
 # Remove first data point (row) 
-cds.returns <- head(cds.returns,-1)
+cds.diffs <- head(cds.diffs,-1)
+
+# Remove all data points with zero or close to zero diffs
+cds.diffs <- cds.diffs %>% filter(Reduce(`&`, as.data.frame(abs(.) > zero.cutoff)))
 
 # Restrict data frame to two years of daily data
-cds.returns <- head(cds.returns, 500)
+cds.diffs <- head(cds.diffs, max.datapoints)
 
-# display data frame
-#  cds.spread
+# Scatterplot
 
-# scatterplot
+# Ahold vs. Carrefour returns
+plot(cds.diffs$`Ahold_Delhaize_ret`, cds.diffs$Carrefour_ret)
 
-plot(cds.returns$`Credit Suisse_ret`, cds.returns$BNP_ret)
-plot(cds.returns$BNP_ret, cds.returns$`Deutsche Bank_ret`)
+# Kering vs. Next UK returns
+plot(cds.diffs$Kering_ret, cds.diffs$`Next_UK_ret`)
 
-# scatter plot summary cds.spread
+# Summary scatter plot cds spreads (level)
+# Observation: clearly shows bi-modal distribution typical of "level" data
 pairs.panels(cds.spread[, 1:6], 
              method = "pearson", # correlation method
              hist.col = "#00AFBB",
@@ -81,22 +122,36 @@ pairs.panels(cds.spread[, 1:6],
              ellipses = TRUE # show correlation ellipses
 )
 
-# scatter plot summary cds.returns
-pairs.panels(cds.returns[, 1:6], 
+# Summary scatter plot summary cds returns
+# Observation: shows uni-modal distribution
+pairs.panels(cds.diffs[, 1:5], 
              method = "pearson", # correlation method
              hist.col = "#00AFBB",
              density = TRUE,  # show density plots
              ellipses = TRUE # show correlation ellipses
 )
 
+# 1: Ahold_Delhaize, 2: Carrefour, 3: Kering, 4: Next UK, 5: Tesco
+time_series_index <- 1
+
 # compute empirical CDF of the CDS spread return series
-fhat_credit_suisse <- empirical.cdf(unlist(cds.spread[, 8], 0.01))
+empirical_cdf <- empirical.cdf(unlist(cds.diffs[, time_series_index], 0.01))
 
 # plot CDF
-plot(fhat_credit_suisse, ylab="CDF")
+plot(empirical_cdf, ylab="CDF")
 
 # plot histogram
-plot(histde(pseudo.uniform(unlist(cds.spread[, 8], 0.01))))
+plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), bw = 0.0008), binw = 0.03))
+plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), hpi(unlist(cds.diffs[, time_series_index]))), binw = 0.09))
+
+
+     
+     
+     
+     
+     
+
+
 
 
 
