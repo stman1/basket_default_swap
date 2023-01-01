@@ -30,3 +30,13 @@ cds.spread <- cds.spread %>%
   mutate_at(.vars = c('Ahold_Delhaize', 'Carrefour', 'Kering', 'Next_UK', 'Tesco'), list(~na.approx(.)))
 
 cds.diffs <- subset(cds.diffs, select = -c(`Ahold_Delhaize`, `Carrefour`, `Kering`, `Next_UK`, `Tesco`))
+
+
+# Summary scatter plot cds spreads (level)
+# Observation: clearly shows bi-modal distribution typical of "level" data
+pairs.panels(cds.spread[, 1:6], 
+             method = "pearson", # correlation method
+             hist.col = "#00AFBB",
+             density = TRUE,  # show density plots
+             ellipses = TRUE # show correlation ellipses
+)

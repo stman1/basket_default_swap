@@ -26,7 +26,6 @@ range.entities <- switch(data.set,
                          "banks" = 'A1:B10', 
                          "automotive" = 'A1:B6')
 
-
 num.entities <- switch(data.set,
                        "retail" =  5, 
                        "banks" = 9, 
@@ -40,7 +39,7 @@ sheet.entities <- 'Entities'
 
 max.datapoints <- 500 # for example: 2 years daily observations on business days is approximately 500 observations
 
-zero.cutoff <- 0.001 # returns / differences smaller than this threshold value are considered to be zero
+zero.cutoff <- 0.01 # spread diffs smaller than this threshold value are considered to be zero
 
 # Function definitions
 
@@ -112,32 +111,21 @@ cds.diffs <- head(cds.diffs, max.datapoints)
 
 # Scatterplot
 
-# Ahold vs. Carrefour returns
-plot(cds.diffs$`Ahold_Delhaize_ret`, cds.diffs$Carrefour_ret)
+# Series 1 diffs vs. series 2 diffs
+plot(cds.diffs[,1], cds.diffs[,2])
 
-# Kering vs. Next UK returns
-plot(cds.diffs$Kering_ret, cds.diffs$`Next_UK_ret`)
+# Series 2 diffs vs. series 3 diffs
+plot(cds.diffs[,2], cds.diffs[,3])
 
-# Summary scatter plot cds spreads (level)
-# Observation: clearly shows bi-modal distribution typical of "level" data
-pairs.panels(cds.spread[, 1:6], 
-             method = "pearson", # correlation method
-             hist.col = "#00AFBB",
-             density = TRUE,  # show density plots
-             ellipses = TRUE # show correlation ellipses
-)
 
 # Summary scatter plot summary cds returns
 # Observation: shows uni-modal distribution
-pairs.panels(cds.diffs[, 1:5], 
+pairs.panels(cds.diffs[, 1:num.entities], 
              method = "pearson", # correlation method
              hist.col = "#00AFBB",
              density = TRUE,  # show density plots
              ellipses = TRUE # show correlation ellipses
 )
-
-# 1: Ahold_Delhaize, 2: Carrefour, 3: Kering, 4: Next UK, 5: Tesco
-time_series_index <- 1
 
 # compute empirical CDF of the CDS spread return series
 empirical_cdf <- empirical.cdf(unlist(cds.diffs[, time_series_index], 0.01))
@@ -145,11 +133,15 @@ empirical_cdf <- empirical.cdf(unlist(cds.diffs[, time_series_index], 0.01))
 # plot CDF
 plot(empirical_cdf, ylab="CDF")
 
-# plot histogram
-plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), bw = 0.0008), binw = 0.03))
-plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), hpi(unlist(cds.diffs[, time_series_index]))), binw = 0.09))
+# plot histogram with user specified bandwith parameter bw and bin width parameter binw
+user.bw = 0.0003
+user.binw = 0.09
 
-
+for (time_series_index in 1:num.entities){
+  plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), bw = user.bw), binw = user.binw))
+  # kernel density estimation using the hpi bandwidth selector
+  #plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), hpi(unlist(cds.diffs[, time_series_index]))), binw = user.binw))
+}
      
      
      
