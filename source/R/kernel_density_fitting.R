@@ -22,10 +22,15 @@ range.spreads_history <- switch(data.set,
                      "automotive" = 'E21:J2104')
 
 range.entities <- switch(data.set,
-                         "retail" = 'A1:B5', 
-                         "banks" = 'A1:B9', 
-                         "automotive" = 'A1:B5')
+                         "retail" = 'A1:B6', 
+                         "banks" = 'A1:B10', 
+                         "automotive" = 'A1:B6')
 
+
+num.entities <- switch(data.set,
+                       "retail" =  5, 
+                       "banks" = 9, 
+                       "automotive" = 5)
 
 excel.file <- 'CDS_spreads.xlsx'
 
