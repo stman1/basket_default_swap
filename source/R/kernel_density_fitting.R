@@ -9,27 +9,31 @@ library(here) # current working directory
 
 # Global variable values
 
-data.set = "retail"
+data.set = "insurance"
 
 data.path <- switch(data.set, 
                     "retail" = file.path(here(), '/../../../CQF/Project/data/Retail'), 
                     "banks" = file.path(here(), '/../../../CQF/Project/data/Banks'), 
-                    "automotive" = file.path(here(), '/../../../CQF/Project/data/Automotive'))
+                    "automotive" = file.path(here(), '/../../../CQF/Project/data/Automotive'),
+                    "insurance" = file.path(here(), '/../../../CQF/Project/data/Insurance'))
 
 range.spreads_history <- switch(data.set,
                      "retail" = 'E21:J2104', 
                      "banks" = 'E21:N1975', 
-                     "automotive" = 'E21:J2104')
+                     "automotive" = 'E21:J2104',
+                     "insurance" = 'E21:O1974')
 
 range.entities <- switch(data.set,
                          "retail" = 'A1:B6', 
                          "banks" = 'A1:B10', 
-                         "automotive" = 'A1:B6')
+                         "automotive" = 'A1:B6',
+                         "insurance" = 'A1:B11')
 
 num.entities <- switch(data.set,
                        "retail" =  5, 
                        "banks" = 9, 
-                       "automotive" = 5)
+                       "automotive" = 5,
+                       "insurance" = 10)
 
 excel.file <- 'CDS_spreads.xlsx'
 
@@ -79,11 +83,19 @@ missing_values <- cds.spread %>% #select(where(is.numeric)) %>%
 #----------------------------------------------------------------------------------------------------#
 #------------Individual data adjustments - change for each data set----------------------------------#
 
+# Drop Generali
+cds.spread <- subset(cds.spread, select = -c(`Generali`))
+
+
+
+
+
 # Remove first 70 data points (Ahold data missing) 
-cds.spread <- tail(cds.spread,-70)
+cds.spread <- tail(cds.spread,-461)
+
+cds.spread <- head(cds.spread,-460)
 
 # Linear interpolation of missing values for all columns
-
 cds.spread <- cds.spread %>%
   mutate_at(.vars = colnames(cds.spread), list(~na.approx(.)))
 
@@ -98,7 +110,6 @@ cds.diffs <- cds.spread %>%
 
 # remove levels
 cds.diffs <- subset(cds.diffs, select = -c(1:num.entities))
-
 
 # Remove first data point (row) 
 cds.diffs <- head(cds.diffs,-1)
@@ -134,7 +145,7 @@ empirical_cdf <- empirical.cdf(unlist(cds.diffs[, time_series_index], 0.01))
 plot(empirical_cdf, ylab="CDF")
 
 # plot histogram with user specified bandwith parameter bw and bin width parameter binw
-user.bw = 0.0003
+user.bw = 0.003
 user.binw = 0.09
 
 for (time_series_index in 1:num.entities){

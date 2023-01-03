@@ -9,27 +9,31 @@ library(here) # current working directory
 
 # Global variables
 
-data.set = "automotive"
+data.set = "insurance"
 
 data.path <- switch(data.set, 
                     "retail" = file.path(here(), '/../../../CQF/Project/data/Retail'), 
                     "banks" = file.path(here(), '/../../../CQF/Project/data/Banks'), 
-                    "automotive" = file.path(here(), '/../../../CQF/Project/data/Automotive'))
+                    "automotive" = file.path(here(), '/../../../CQF/Project/data/Automotive'),
+                    "insurance" = file.path(here(), '/../../../CQF/Project/data/Insurance'))
 
-range.price_history <- switch(data.set,
-                                "retail" = 'B2:G2821', 
-                                "banks" = 'B2:J2791', 
-                                "automotive" = 'B2:G2798')
+range.spreads_history <- switch(data.set,
+                                "retail" = 'E21:J2104', 
+                                "banks" = 'E21:N1975', 
+                                "automotive" = 'E21:J2104',
+                                "insurance" = 'E21:N1974')
 
 range.entities <- switch(data.set,
                          "retail" = 'A1:B6', 
                          "banks" = 'A1:B10', 
-                         "automotive" = 'A1:B6')
+                         "automotive" = 'A1:B6',
+                         "insurance" = 'A1:B11')
 
 num.entities <- switch(data.set,
                        "retail" =  5, 
                        "banks" = 9, 
-                       "automotive" = 5)
+                       "automotive" = 5,
+                       "insurance" = 10)
 
 excel.file <- 'CDS_spreads.xlsx'
 
