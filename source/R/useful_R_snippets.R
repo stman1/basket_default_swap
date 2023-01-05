@@ -40,3 +40,27 @@ pairs.panels(cds.spread[, 1:6],
              density = TRUE,  # show density plots
              ellipses = TRUE # show correlation ellipses
 )
+
+
+# clumsy way of computing diffs
+cds.diffs <- cds.spread %>%
+  mutate(across(where(is.numeric), list(diff = ~(. - lead(.)))))
+
+# count missing values
+missing_values <- cds.spread %>% #select(where(is.numeric)) %>%
+  summarise_all(list(~(sum(is.na(.)))))
+
+# 2. Log Returns
+
+cds.diffs <- cds.spread %>%
+  mutate(across(where(is.numeric), list(diff = ~(log(./lead(.))))))
+# remove levels
+cds.diffs <- subset(cds.diffs, select = -c(1:num.entities))
+# Remove first data point (row) 
+cds.diffs <- head(cds.diffs,-1)
+
+
+# Remove first 70 data points (Ahold data missing) 
+cds.spread <- tail(cds.spread,-461)
+
+cds.spread <- head(cds.spread,-460)

@@ -57,6 +57,14 @@ empirical.cdf = function(X, bw_parameter){
   return(empirical_cdf)
 }
 
+drop.name = function(series.name, spread.frame, entities.frame){
+  spread.frame <- spread.frame[names(spread.frame) != series.name]
+  entities.frame <- subset(entities.frame, entities.frame$Name != series.name)
+  num.entities = num.entities-1
+  resultList <- list("spreads" = spread.frame, "entities" = entities.frame, "count_entities" = num.entities)
+  return(resultList)
+}
+
 # load cds spreads time series from Excel sheet CDS_spreads_history into R dataframe
 cds.spread = read_excel(file.path(data.path, excel.file),
                            sheet.spreads_history,
@@ -72,47 +80,52 @@ cds.spread <- as.data.frame(cds.spread) # convert from tibble to object of type 
 row.names(cds.spread) <- cds.spread$Timestamp
 cds.spread <- cds.spread[,-1] # remove index column, dataframe is now indexed by date
 
-
-
 # count missing values
 missing_values <- cds.spread %>% #select(where(is.numeric)) %>%
   summarise_all(list(~(sum(is.na(.)))))
 
+# Remove all rows with NAs
+cds.spread <- cds.spread[complete.cases(cds.spread[1:num.entities]),]
+
 
 #----------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------------------------------------#
-#------------Individual data adjustments - change for each data set----------------------------------#
+#------------Individual data adjustments - change for each data set-------------------mut---------------#
 
 # Drop Generali
-cds.spread <- subset(cds.spread, select = -c(`Generali`))
+
+mutated_frames = drop.name('Generali', cds.spread, cds.entities)
+cds.spread <- mutated_frames$spreads
+cds.entities <- mutated_frames$entities
+num.entities <- mutated_frames$count_entities
+rm(mutated_frames)
 
 
+#----------------------------------------------------------------------------------------------------#
+#----------------------------------------------------------------------------------------------------#
+#-------- End of individual data adjustments - change for each data set------------------------------#
 
-
-
-# Remove first 70 data points (Ahold data missing) 
-cds.spread <- tail(cds.spread,-461)
-
-cds.spread <- head(cds.spread,-460)
 
 # Linear interpolation of missing values for all columns
 cds.spread <- cds.spread %>%
   mutate_at(.vars = colnames(cds.spread), list(~na.approx(.)))
 
 # compute n-th day returns
-frequency_n_days <- 5
+frequency_n_days <- 3
 
 cds.spread <- cds.spread %>%
   slice(which(row_number() %% frequency_n_days == 1))
 
-cds.diffs <- cds.spread %>%
-  mutate(across(is.numeric, list(diff = ~(. - lead(.)))))
+# Diffs, Returns, Log returns
 
-# remove levels
-cds.diffs <- subset(cds.diffs, select = -c(1:num.entities))
+# 1. Diffs
 
-# Remove first data point (row) 
-cds.diffs <- head(cds.diffs,-1)
+cds.diffs <- as.data.frame(lapply(cds.spread, diff, lag=1))
+rm(cds.spread)
+
+# Remove all rows with same diffs
+cds.diffs <- cds.diffs %>% filter(colnames(cds.diffs)[1] != colnames(cds.diffs)[2])
+#cds.diffs <- cds.diffs %>% filter(cds.diffs$Aegon != cds.diffs$Allianz)
 
 # Remove all data points with zero or close to zero diffs
 cds.diffs <- cds.diffs %>% filter(Reduce(`&`, as.data.frame(abs(.) > zero.cutoff)))
@@ -138,20 +151,21 @@ pairs.panels(cds.diffs[, 1:num.entities],
              ellipses = TRUE # show correlation ellipses
 )
 
+
 # compute empirical CDF of the CDS spread return series
 empirical_cdf <- empirical.cdf(unlist(cds.diffs[, time_series_index], 0.01))
 
 # plot CDF
 plot(empirical_cdf, ylab="CDF")
 
-# plot histogram with user specified bandwith parameter bw and bin width parameter binw
-user.bw = 0.003
-user.binw = 0.09
+# plot histogram with user specified bandwidth parameter bw and bin width parameter binw
+user.bw = 0.00003 #0.00005
+user.binw = 0.09 #0.008
 
 for (time_series_index in 1:num.entities){
-  plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), bw = user.bw), binw = user.binw))
+  plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), bw = user.bw), binw = user.binw), xlab=cds.entities$Name[time_series_index])
   # kernel density estimation using the hpi bandwidth selector
-  #plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), hpi(unlist(cds.diffs[, time_series_index]))), binw = user.binw))
+  #plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), hpi(unlist(cds.diffs[, time_series_index]))), binw = user.binw), xlab=cds.entities$Name[time_series_index])
 }
      
      

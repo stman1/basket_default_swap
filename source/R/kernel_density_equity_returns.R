@@ -17,11 +17,11 @@ data.path <- switch(data.set,
                     "automotive" = file.path(here(), '/../../../CQF/Project/data/Automotive'),
                     "insurance" = file.path(here(), '/../../../CQF/Project/data/Insurance'))
 
-range.spreads_history <- switch(data.set,
-                                "retail" = 'E21:J2104', 
-                                "banks" = 'E21:N1975', 
-                                "automotive" = 'E21:J2104',
-                                "insurance" = 'E21:N1974')
+range.price_history <- switch(data.set,
+                              "retail" = 'B2:G2821', 
+                              "banks" = 'B2:J2791', 
+                              "automotive" = 'B2:G2798',
+                              "insurance" = 'B2:L2821')
 
 range.entities <- switch(data.set,
                          "retail" = 'A1:B6', 
@@ -39,6 +39,8 @@ excel.file <- 'CDS_spreads.xlsx'
 
 sheet.price_history <- 'Equity_prices'
 
+sheet.entities <- 'Entities'
+
 max.datapoints <- 500 # for example: 2 years daily observations on business days is approximately 500 observations
 zero.cutoff <- 0.001 # returns / differences smaller than this threshold value are considered to be zero
 
@@ -54,10 +56,23 @@ empirical.cdf = function(X, bw_parameter){
   return(empirical_cdf)
 }
 
+drop.name = function(series.name, spread.frame, entities.frame){
+  spread.frame <- spread.frame[names(spread.frame) != series.name]
+  entities.frame <- subset(entities.frame, entities.frame$Name != series.name)
+  num.entities = num.entities-1
+  resultList <- list("spreads" = spread.frame, "entities" = entities.frame, "count_entities" = num.entities)
+  return(resultList)
+}
+
 # read in Excel file, tab CDS_spreads_history into R dataframe
 equity.price = read_excel(file.path(data.path, excel.file),
                         sheet.price_history,
                         range = range.price_history)
+
+# load entity names from Excel sheet 'Entities'  
+cds.entities = read_excel(file.path(data.path, excel.file),
+                          sheet.entities,
+                          range = range.entities)
 
 # Make the date column the data.frame row index
 equity.price <- as.data.frame(equity.price) # convert from tibble to data.frame
@@ -76,19 +91,21 @@ equity.price <- equity.price %>%
   mutate_at(.vars = colnames(equity.price), list(~na.approx(.)))
 
 # compute n-th day returns
-frequency_n_days <- 1
+frequency_n_days <- 5
 
 equity.price <- equity.price %>%
   slice(which(row_number() %% frequency_n_days == 1))
 
 equity.returns <- equity.price %>%
-  mutate(across(is.numeric, list(ret = ~(log(./lead(.))))))
+  mutate(across(where(is.numeric), list(ret = ~(log(.x/lag(.x))))))
 
 # remove levels
 equity.returns <- subset(equity.returns, select = -c(1:num.entities))
 
-# Remove first data point (row) 
-equity.returns <- head(equity.returns,-1)
+# Remove last row 
+equity.returns <- tail(equity.returns,-1)
+
+equity.returns <- equity.returns[complete.cases(equity.returns[1:num.entities]),]
 
 # Remove all data points with zero or close to zero diffs
 equity.returns <- equity.returns %>% filter(Reduce(`&`, as.data.frame(abs(.) > zero.cutoff)))
@@ -113,6 +130,7 @@ pairs.panels(equity.returns[, 1:num.entities],
              ellipses = TRUE # show correlation ellipses
 )
 
+time_series_index = 1
 # compute empirical CDF of the CDS spread return series
 empirical_cdf <- empirical.cdf(unlist(equity.returns[, time_series_index], 0.01))
 
@@ -120,7 +138,14 @@ empirical_cdf <- empirical.cdf(unlist(equity.returns[, time_series_index], 0.01)
 plot(empirical_cdf, ylab="CDF")
 
 # plot histogram
+user.bw = 0.0003 # 0.0003
+user.binw = 0.09 # 0.09
 
+for (time_series_index in 1:num.entities){
+  plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), bw = user.bw), binw = user.binw), xlab=cds.entities$Name[time_series_index])
+  # kernel density estimation using the hpi bandwidth selector
+  #plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), hpi(unlist(equity.returns[, time_series_index]))), binw = user.binw))
+}
  
 
 
