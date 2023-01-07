@@ -9,7 +9,7 @@ library(here) # current working directory
 
 # Global variables
 
-data.set = "insurance"
+data.set = "automotive"
 
 data.path <- switch(data.set, 
                     "retail" = file.path(here(), '/../../../CQF/Project/data/Retail'), 
@@ -42,12 +42,13 @@ sheet.price_history <- 'Equity_prices'
 sheet.entities <- 'Entities'
 
 max.datapoints <- 500 # for example: 2 years daily observations on business days is approximately 500 observations
-zero.cutoff <- 0.001 # returns / differences smaller than this threshold value are considered to be zero
+zero.cutoff <- 0.0005 # returns / differences smaller than this threshold value are considered to be zero
 
 # Function definitions
 
 pseudo.uniform = function(X, bw_parameter){
-  empirical_cdf <- kcde(unlist(X), h = bw_parameter)
+  #empirical_cdf <- kcde(unlist(X), h = bw_parameter)
+  empirical_cdf <- kcde(X, h = bw_parameter)
   predict(empirical_cdf, x=X)
 }
 
@@ -138,7 +139,7 @@ empirical_cdf <- empirical.cdf(unlist(equity.returns[, time_series_index], 0.01)
 plot(empirical_cdf, ylab="CDF")
 
 # plot histogram
-user.bw = 0.0003 # 0.0003
+user.bw = 0.0005 # 0.0003
 user.binw = 0.09 # 0.09
 
 for (time_series_index in 1:num.entities){
@@ -147,10 +148,10 @@ for (time_series_index in 1:num.entities){
   #plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), hpi(unlist(equity.returns[, time_series_index]))), binw = user.binw))
 }
  
-
-
-
-
+time_series_index = 1
+user.bw = 0.00035 #  0.000099
+user.binw = 0.09 # 0.09
+plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), bw = user.bw), binw = user.binw), xlab=deparse(user.bw))
 
 
 
