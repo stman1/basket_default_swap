@@ -90,7 +90,7 @@ cds.spread <- cds.spread[complete.cases(cds.spread[1:num.entities]),]
 
 #----------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------------------------------------#
-#------------Individual data adjustments - change for each data set-------------------mut---------------#
+#------------Individual data adjustments - change for each data set----------------------------------#
 
 # Drop Generali
 
@@ -105,16 +105,21 @@ rm(mutated_frames)
 #----------------------------------------------------------------------------------------------------#
 #-------- End of individual data adjustments - change for each data set------------------------------#
 
+# Delete all rows with at least one NA
+cds.spread <- cds.spread[complete.cases(cds.spread[1:num.entities]),]
+
+# compute n-th day returns
+frequency_n_days <- 5
+
+cds.spread <- cds.spread %>%
+  slice(which(row_number() %% frequency_n_days == 1))
+
 
 # Linear interpolation of missing values for all columns
 cds.spread <- cds.spread %>%
   mutate_at(.vars = colnames(cds.spread), list(~na.approx(.)))
 
-# compute n-th day returns
-frequency_n_days <- 3
 
-cds.spread <- cds.spread %>%
-  slice(which(row_number() %% frequency_n_days == 1))
 
 # Diffs, Returns, Log returns
 
@@ -158,17 +163,33 @@ empirical_cdf <- empirical.cdf(unlist(cds.diffs[, time_series_index], 0.01))
 # plot CDF
 plot(empirical_cdf, ylab="CDF")
 
-# plot histogram with user specified bandwidth parameter bw and bin width parameter binw
-user.bw = 0.00003 #0.00005
-user.binw = 0.09 #0.008
+
+# plot histogram
+user.bw = 0.0005 # 0.0003
+user.binw = 0.09 # 0.09
 
 for (time_series_index in 1:num.entities){
-  plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), bw = user.bw), binw = user.binw), xlab=cds.entities$Name[time_series_index])
+  plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), bw = user.bw), binw = user.binw), xlab=paste(cds.entities$Name[time_series_index], deparse(user.binw)))
   # kernel density estimation using the hpi bandwidth selector
-  #plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), hpi(unlist(cds.diffs[, time_series_index]))), binw = user.binw), xlab=cds.entities$Name[time_series_index])
+  #plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), hpi(unlist(cds.diffs[, time_series_index]))), binw = user.binw))
 }
-     
-     
+
+time_series_index = 3
+
+bw_list = c(0.01, 0.005, 0.0025, 0.00125, 0.000625, 0.0003125, 0.00015625, 0.0000783125, 0.00003915625, 0.00001975, 0.000009875, 0.00000493875, 0.000002469, 0.0000012345, 0.00000000000001)
+
+for (bw_ in bw_list){
+  plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), bw = bw_), binw = user.binw), xlab=paste(cds.entities$Name[time_series_index], deparse(bw_)))
+  # kernel density estimation using the hpi bandwidth selector
+  #plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), hpi(unlist(cds.diffs[, time_series_index]))), binw = user.binw))
+}
+
+
+user.bw = 0.0000625 #  0.000099
+user.binw = 0.09 # 0.09
+plot(histde(pseudo.uniform(unlist(cds.diffs[, time_series_index]), bw = user.bw), binw = user.binw), xlab=paste(cds.entities$Name[time_series_index], deparse(user.bw)))
+
+
      
      
      

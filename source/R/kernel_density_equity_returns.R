@@ -9,7 +9,7 @@ library(here) # current working directory
 
 # Global variables
 
-data.set = "automotive"
+data.set = "insurance"
 
 data.path <- switch(data.set, 
                     "retail" = file.path(here(), '/../../../CQF/Project/data/Retail'), 
@@ -143,15 +143,26 @@ user.bw = 0.0005 # 0.0003
 user.binw = 0.09 # 0.09
 
 for (time_series_index in 1:num.entities){
-  plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), bw = user.bw), binw = user.binw), xlab=cds.entities$Name[time_series_index])
+  plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), bw = user.bw), binw = user.binw), xlab=paste(cds.entities$Name[time_series_index], deparse(user.binw)))
   # kernel density estimation using the hpi bandwidth selector
   #plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), hpi(unlist(equity.returns[, time_series_index]))), binw = user.binw))
 }
- 
+
 time_series_index = 1
-user.bw = 0.00035 #  0.000099
+ 
+bw_list = c(0.01, 0.005, 0.0025, 0.00125, 0.000625, 0.0003125, 0.00015625, 0.0000783125, 0.00003915625, 0.00001975, 0.000009875, 0.00000493875, 0.000002469, 0.0000012345, 0.00000000000001)
+
+for (bw_ in bw_list){
+  plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), bw = bw_), binw = user.binw), xlab=paste(cds.entities$Name[time_series_index], deparse(bw_)))
+  # kernel density estimation using the hpi bandwidth selector
+  #plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), hpi(unlist(equity.returns[, time_series_index]))), binw = user.binw))
+}
+
+
+time_series_index = 1
+user.bw = 0.0000625 #  0.000099
 user.binw = 0.09 # 0.09
-plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), bw = user.bw), binw = user.binw), xlab=deparse(user.bw))
+plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), bw = user.bw), binw = user.binw), xlab=paste(cds.entities$Name[time_series_index], deparse(user.bw)))
 
 
 
