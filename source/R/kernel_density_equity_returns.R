@@ -9,7 +9,7 @@ library(here) # current working directory
 
 # Global variables
 
-data.set = "insurance"
+data.set = "automotive"
 
 data.path <- switch(data.set, 
                     "retail" = file.path(here(), '/../../../CQF/Project/data/Retail'), 
@@ -47,7 +47,6 @@ zero.cutoff <- 0.0005 # returns / differences smaller than this threshold value 
 # Function definitions
 
 pseudo.uniform = function(X, bw_parameter){
-  #empirical_cdf <- kcde(unlist(X), h = bw_parameter)
   empirical_cdf <- kcde(X, h = bw_parameter)
   predict(empirical_cdf, x=X)
 }
@@ -117,7 +116,7 @@ equity.returns <- tail(equity.returns, 500)
 # Scatterplot
 
 # Series 1 diffs vs. series 2 diffs
-plot(equity.returns[,1], equity.returns[,2])
+plot(equity.returns[,1], equity.returns[,4])
 
 # Series 2 diffs vs. series 3 diffs
 plot(equity.returns[,2], equity.returns[,3])
@@ -158,6 +157,8 @@ for (bw_ in bw_list){
   #plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), hpi(unlist(equity.returns[, time_series_index]))), binw = user.binw))
 }
 
+
+bmw.uniform <- histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), bw = bw_), binw = user.binw)$
 
 time_series_index = 1
 user.bw = 0.0000625 #  0.000099

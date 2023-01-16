@@ -13,7 +13,7 @@ Created on Tue Jul  5 07:29:03 2022
 @author: Stefan Mangold
 """
 
-# LOAD INTEREST RATE INFORMATION AND COMPUTE DISCOUNT FACTORS
+# LOAD INTEREST RATE INFORMATION AND DISCOUNT FACTORS
 
 work_dir = os.getcwd()
 cur_dir = os.chdir('../..')  # move two directories up
@@ -27,7 +27,7 @@ ir_data_frame = parse_interest_rate_curve(data_set_directory,
                                           ['Instr.Name', 'Close','START DATE','Mat.Dat'])
 
 
-# TEST LOG-LINEAR INTERPOLATION OF DISCOUNT FACTORS
+# TEST OF LOG-LINEAR INTERPOLATION OF DISCOUNT FACTORS
 
 maturity = [0.5/12, 0.75/12, 1/12, 1/6, 1/4, 1/3, 5/12, 6/12, 7/12, 8/12, 9/12, 10/12, 11/12, 1, 15/12, 0.75, 21/12, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20, 25, 30
             ]
