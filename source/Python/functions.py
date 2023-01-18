@@ -250,3 +250,28 @@ def cds_bootstrapper(maturity, discount_factor, spread, recovery, plot_prob=Fals
                                           yTitle='Hazard Rates')
 
     return df
+
+
+def t_copula_density(uniform_pseudo_sample_uni, nu, sigma):
+    '''
+    computes the t-copula density for one 
+    uniform pseudo sample, a 1 x n column vector
+
+    Parameters
+    ----------
+    uniform_pseudo_sample : TYPE
+        DESCRIPTION.
+    nu : TYPE
+        DESCRIPTION.
+    sigma : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    '''
+    
+    
+
+

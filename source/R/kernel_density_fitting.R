@@ -12,10 +12,10 @@ library(here) # current working directory
 data.set = "insurance"
 
 data.path <- switch(data.set, 
-                    "retail" = file.path(here(), '/../../../CQF/Project/data/Retail'), 
-                    "banks" = file.path(here(), '/../../../CQF/Project/data/Banks'), 
-                    "automotive" = file.path(here(), '/../../../CQF/Project/data/Automotive'),
-                    "insurance" = file.path(here(), '/../../../CQF/Project/data/Insurance'))
+                    "retail" = file.path(dirname(dirname(dirname(getwd()))),'basket_default_swap/data/Retail'), 
+                    "banks" = file.path(dirname(dirname(dirname(getwd()))),'basket_default_swap/data/Banks'), 
+                    "automotive" = file.path(dirname(dirname(dirname(getwd()))),'basket_default_swap/data/Automotive'),
+                    "insurance" = file.path(dirname(dirname(dirname(getwd()))),'basket_default_swap/data/Insurance'))
 
 range.spreads_history <- switch(data.set,
                      "retail" = 'E21:J2104', 

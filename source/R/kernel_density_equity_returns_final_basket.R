@@ -9,40 +9,23 @@ library(here) # current working directory
 
 # Global variables
 
-data.set = "automotive"
+data.set = "final_basket"
 
-data.path <- switch(data.set, 
-                    "retail" = file.path(dirname(dirname(dirname(getwd()))),'basket_default_swap/data/Retail'), 
-                    "banks" = file.path(dirname(dirname(dirname(getwd()))),'basket_default_swap/data/Banks'), 
-                    "automotive" = file.path(dirname(dirname(dirname(getwd()))),'basket_default_swap/data/Automotive'),
-                    "insurance" = file.path(dirname(dirname(dirname(getwd()))),'basket_default_swap/data/Insurance'))
+data.path <- file.path(dirname(dirname(dirname(getwd()))), 'basket_default_swap/data/final_basket')
 
-range.price_history <- switch(data.set,
-                              "retail" = 'B2:G2821', 
-                              "banks" = 'B2:J2791', 
-                              "automotive" = 'B2:G2798',
-                              "insurance" = 'B2:L2821')
+range.price_history <- 'B2:G2821' 
+                              
+range.entities <- 'A1:B6'
 
-range.entities <- switch(data.set,
-                         "retail" = 'A1:B6', 
-                         "banks" = 'A1:B10', 
-                         "automotive" = 'A1:B6',
-                         "insurance" = 'A1:B11')
+num.entities <- 5
 
-num.entities <- switch(data.set,
-                       "retail" =  5, 
-                       "banks" = 9, 
-                       "automotive" = 5,
-                       "insurance" = 10)
-
-excel.file <- 'CDS_spreads.xlsx'
+excel.file <- 'CDS_spreads_basket.xlsx'
 
 sheet.price_history <- 'Equity_prices'
 
 sheet.entities <- 'Entities'
 
 max.datapoints <- 500 # for example: 2 years daily observations on business days is approximately 500 observations
-zero.cutoff <- 0.0005 # returns / differences smaller than this threshold value are considered to be zero
 
 # Function definitions
 
@@ -56,18 +39,10 @@ empirical.cdf = function(X, bw_parameter){
   return(empirical_cdf)
 }
 
-drop.name = function(series.name, spread.frame, entities.frame){
-  spread.frame <- spread.frame[names(spread.frame) != series.name]
-  entities.frame <- subset(entities.frame, entities.frame$Name != series.name)
-  num.entities = num.entities-1
-  resultList <- list("spreads" = spread.frame, "entities" = entities.frame, "count_entities" = num.entities)
-  return(resultList)
-}
-
 # read in Excel file, tab CDS_spreads_history into R dataframe
 equity.price = read_excel(file.path(data.path, excel.file),
-                        sheet.price_history,
-                        range = range.price_history)
+                          sheet.price_history,
+                          range = range.price_history)
 
 # load entity names from Excel sheet 'Entities'  
 cds.entities = read_excel(file.path(data.path, excel.file),
@@ -90,25 +65,13 @@ equity.price <- equity.price[-1, ]
 equity.price <- equity.price %>%
   mutate_at(.vars = colnames(equity.price), list(~na.approx(.)))
 
-# compute n-th day returns
-frequency_n_days <- 5
-
-equity.price <- equity.price %>%
-  slice(which(row_number() %% frequency_n_days == 1))
-
 equity.returns <- equity.price %>%
   mutate(across(where(is.numeric), list(ret = ~(log(.x/lag(.x))))))
 
 # remove levels
 equity.returns <- subset(equity.returns, select = -c(1:num.entities))
 
-# Remove last row 
-equity.returns <- tail(equity.returns,-1)
-
 equity.returns <- equity.returns[complete.cases(equity.returns[1:num.entities]),]
-
-# Remove all data points with zero or close to zero diffs
-equity.returns <- equity.returns %>% filter(Reduce(`&`, as.data.frame(abs(.) > zero.cutoff)))
 
 # Restrict data frame to two years of daily data
 equity.returns <- tail(equity.returns, max.datapoints)
@@ -121,7 +84,7 @@ plot(equity.returns[,1], equity.returns[,4])
 # Series 2 diffs vs. series 3 diffs
 plot(equity.returns[,2], equity.returns[,3])
 
-# Summary scatter plot summary cds returns
+# Summary scatter plot for equity returns data
 # Observations: shows uni-modal distribution
 pairs.panels(equity.returns[, 1:num.entities], 
              method = "pearson", # correlation method
@@ -143,38 +106,37 @@ user.binw = 0.09 # 0.09
 
 for (time_series_index in 1:num.entities){
   plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), bw = user.bw), binw = user.binw), xlab=paste(cds.entities$Name[time_series_index], deparse(user.binw)))
-  # kernel density estimation using the hpi bandwidth selector
-  #plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), hpi(unlist(equity.returns[, time_series_index]))), binw = user.binw))
 }
 
-time_series_index = 1
- 
+time_series_index = 5
+
 bw_list = c(0.01, 0.005, 0.0025, 0.00125, 0.000625, 0.0003125, 0.00015625, 0.0000783125, 0.00003915625, 0.00001975, 0.000009875, 0.00000493875, 0.000002469, 0.0000012345, 0.00000000000001)
 
 for (bw_ in bw_list){
   plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), bw = bw_), binw = user.binw), xlab=paste(cds.entities$Name[time_series_index], deparse(bw_)))
-  # kernel density estimation using the hpi bandwidth selector
-  #plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), hpi(unlist(equity.returns[, time_series_index]))), binw = user.binw))
 }
 
-time_series_index = 4
-user.bw = 0.0000625 #  0.000099
-user.binw = 0.09 # 0.09
-plot(histde(pseudo.uniform(unlist(equity.returns[, time_series_index]), bw = user.bw), binw = user.binw), xlab=paste(cds.entities$Name[time_series_index], deparse(user.bw)))
+#         Optimal bandwidth selection per name by visual inspection of histograms
 
-bmw.uniform <- histde(pseudo.uniform(unlist(equity.returns[, 1]), bw = user.bw), binw = user.binw)
+# Prudential 0.0003125
+# BMW 0.0003125
+# VW 0.0000783125
+# Deutsche Bank 0.00001975
+# Kering 0.00015625
 
-vw.uniform <- histde(pseudo.uniform(unlist(equity.returns[, 4]), bw = user.bw), binw = user.binw)
+prudential.uniform <- histde(pseudo.uniform(unlist(equity.returns[, 1]), bw = 0.0003125), binw = 0.09)
+bmw.uniform <- histde(pseudo.uniform(unlist(equity.returns[, 2]), bw = 0.0003125), binw = 0.09)
+vw.uniform <- histde(pseudo.uniform(unlist(equity.returns[, 3]), bw = 0.0000783125), binw = 0.09)
+deutschebank.uniform <- histde(pseudo.uniform(unlist(equity.returns[, 4]), bw = 0.00001975), binw = 0.09)
+kering.uniform <- histde(pseudo.uniform(unlist(equity.returns[, 5]), bw = 0.00015625), binw = 0.09)
 
+# Define data frame for the uniform pseudo samples
 
-
-# Define data frame to contain the smoothed uniforms
-
-pseudo.samples <- data.frame(col1 = series1.uniform$x, 
-                             col2 = series2.uniform$x,
-                             col3 = series3.uniform$x,
-                             col4 = series4.uniform$x,
-                             col5 = series5.uniform$x)
+pseudo.samples <- data.frame(col1 = prudential.uniform$x, 
+                             col2 = bmw.uniform$x,
+                             col3 = vw.uniform$x,
+                             col4 = deutschebank.uniform$x,
+                             col5 = kering.uniform$x)
 
 colnames(pseudo.samples) <- c(cds.entities$Name)
 
