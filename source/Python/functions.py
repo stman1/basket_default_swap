@@ -251,6 +251,36 @@ def cds_bootstrapper(maturity, discount_factor, spread, recovery, plot_prob=Fals
 
     return df
 
+def linearise_spearman_correlation_matrix(spearman_corr_matrix):
+    '''
+    applies linearisation to a spearman correlation matrix
+    e.g. based on linear historical correlation of pseudo samples
+    
+
+    Parameters
+    ----------
+    spearman_corr_matrix : 
+        a square spearman correlation matrix
+
+    Returns
+    -------
+    linearised_corr_matrix : TYPE
+        a linearised spearman correlation matrix, 
+        where all off diagonal elemnents are linearised
+        by applying the function 2 x sin(pi / 6 * matrix_element)
+
+    '''
+    
+    # create mask for off-diagonal elements
+    mask = ~np.eye(spearman_corr_matrix.shape[0],dtype=bool)
+    # apply linearisation to all off-diagonal elements
+    linearised_corr_matrix = np.where(mask,(2* np.sin(spearman_corr_matrix * np.pi/ 6) ).astype(float),spearman_corr_matrix)
+    # return linearised matrix
+    return linearised_corr_matrix
+
+    
+
+
 
 def t_copula_density(uniform_pseudo_sample_uni, nu, sigma):
     '''
