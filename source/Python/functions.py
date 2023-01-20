@@ -9,6 +9,9 @@ Created on Sat Jan 14 09:32:46 2022
 import os
 import pandas as pd
 import numpy as np
+from scipy.special import gamma
+from scipy.stats import t
+from functools import reduce
 from datetime import timedelta, datetime
 from math import log, exp
 
@@ -251,10 +254,11 @@ def cds_bootstrapper(maturity, discount_factor, spread, recovery, plot_prob=Fals
 
     return df
 
-def linearise_spearman_correlation_matrix(spearman_corr_matrix):
+def linearize_spearman_correlation_matrix(spearman_corr_matrix):
     '''
-    applies linearisation to a spearman correlation matrix
-    e.g. based on linear historical correlation of pseudo samples
+    applies 'linearisation' to a spearman correlation matrix
+    e.g. based on linear historical correlation of near uniformly
+    distributed pseudo-samples
     
 
     Parameters
@@ -274,33 +278,54 @@ def linearise_spearman_correlation_matrix(spearman_corr_matrix):
     # create mask for off-diagonal elements
     mask = ~np.eye(spearman_corr_matrix.shape[0],dtype=bool)
     # apply linearisation to all off-diagonal elements
-    linearised_corr_matrix = np.where(mask,(2* np.sin(spearman_corr_matrix * np.pi/ 6) ).astype(float),spearman_corr_matrix)
-    # return linearised matrix
-    return linearised_corr_matrix
+    linearized_corr_matrix = np.where(mask,(2* np.sin(spearman_corr_matrix * np.pi / 6) ).astype(float), spearman_corr_matrix)
+
+    return linearized_corr_matrix
 
     
 
 
 
-def t_copula_density(uniform_pseudo_sample_uni, nu, sigma):
+def student_t_copula_density(uniform_pseudo_sample, n, nu, sigma):
     '''
-    computes the t-copula density for one 
+    computes the Student-t copula density for one 
     uniform pseudo sample, a 1 x n column vector
+    of uniformly distributed samples 
 
     Parameters
     ----------
-    uniform_pseudo_sample : TYPE
-        DESCRIPTION.
-    nu : TYPE
-        DESCRIPTION.
-    sigma : TYPE
-        DESCRIPTION.
+    uniform_pseudo_sample : np.array (1 x n)
+        a 1 x n column array of uniform samples
+    n : int
+        size of pseudo-sample (e.g. 5)
+    nu : int
+        degree of freedom parameter for Student-t distribution
+    sigma : (n x n) np.array (2d)
+        rank correlation matrix
 
     Returns
     -------
-    None.
+    copula density for one pseudo-sample
 
     '''
+    # f1 = 1st fraction, f2 = 2nd fraction, etc.
+    
+    f1 = 1. / np.sqrt(np.linalg.det(sigma))
+    f2 = gamma((nu + n )/ 2.) / gamma(nu / 2.)
+    f3 = (gamma(nu / 2.) / gamma((nu + 1.) / 2.))**n
+    
+    inv_cdf = t.ppf(uniform_pseudo_sample, nu)
+    inv_sigma = np.linalg.inv(sigma)
+    
+    f4_num_f = (inv_cdf * inv_sigma * inv_cdf) / nu
+    f4_num = (1. + f4_num_f)**(-(nu + n)/2.)
+    
+    f4_denom_list = [(1. + (t.ppf(u, nu)**2) / nu) for u in uniform_pseudo_sample]
+    f4_denom = (reduce((lambda x, y: x * y), f4_denom_list))**(-(nu + 1.) / 2.)
+    
+    density = f1 * f2 * f3 * f4_num / f4_denom
+    
+    return density
     
     
 

@@ -9,7 +9,7 @@ from functions import parse_interest_rate_curve, loglinear_discount_factor
 
 
 """
-Created on Tue Jul  5 07:29:03 2022
+Created on Thu Jan 19 20:46:03 2023
 
 @author: Stefan Mangold
 """
