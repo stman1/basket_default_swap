@@ -52,10 +52,12 @@ print(f'discount factors: {cds_discount_factors}')
 
 from functions import student_t_copula_density
 
+# input parameters
 n = 5
 uniform_pseudo_sample = np.random.uniform(0, 1, n)
 nu = 1
-
+# create a fake correlation matrix
+sigma = np.random.uniform(0., 1., [5,5])
 
 density = student_t_copula_density(uniform_pseudo_sample, n, nu, sigma)
 
