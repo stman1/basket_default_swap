@@ -125,6 +125,34 @@ def parse_interest_rate_curve(data_set_dir, excel_file_name_, sheet_name_, heade
     return ir_curve_frame
 
 
+def parse_pseudo_samples(data_set_directory_name, data_set_file_name, data_set_headers):
+    '''
+    Reads pseudo-sample data from a csv file into a pandas dataframe
+
+    Parameters
+    ----------
+    data_set_directory_name : string literal
+        name of directory containing pseudo sample csv file, e.g. 'PseudoSamples'
+    data_set_file_name : string literal
+        name of csv file containing pseudo sample data, including file type ending, eg. 'pseudo_samples.csv'
+    data_set_headers : list of string literals
+        a list of cds entity header names, e.g.  ['Deutsche Bank', 'Tesco', ...]
+
+    Returns
+    -------
+    pseudo_sample_data_frame : pandas dataframe
+        dataframe containing pseudo samples
+
+    '''
+    os.chdir('../..')  # move two directories up
+    os.chdir("%s%s%s"%('data','/', data_set_directory_name)) 
+
+    pseudo_sample_data_frame = pd.read_csv(data_set_file_name, 
+                                           header=0, 
+                                           names=data_set_headers)  
+    
+    return pseudo_sample_data_frame
+
 def loglinear_discount_factor(maturity, discount_factor, tenor):
     '''
     - does log-linear interpolation of discount factors 
@@ -277,7 +305,7 @@ def linearize_spearman_correlation_matrix(spearman_corr_matrix):
     
     # create mask for off-diagonal elements
     mask = ~np.eye(spearman_corr_matrix.shape[0],dtype=bool)
-    # apply linearisation to all off-diagonal elements
+    # apply linearization to all off-diagonal elements
     linearized_corr_matrix = np.where(mask,(2* np.sin(spearman_corr_matrix * np.pi / 6) ).astype(float), spearman_corr_matrix)
 
     return linearized_corr_matrix
@@ -286,7 +314,7 @@ def linearize_spearman_correlation_matrix(spearman_corr_matrix):
 
 
 
-def student_t_copula_density(uniform_pseudo_sample, n, nu, sigma):
+def student_t_copula_density(uniform_pseudo_sample, n, nu, f1, f2, f3, sigma_det, sigma_inverse):
     '''
     computes the Student-t copula density for one 
     uniform pseudo sample, a 1 x n column vector
@@ -300,47 +328,99 @@ def student_t_copula_density(uniform_pseudo_sample, n, nu, sigma):
         size of pseudo-sample (e.g. 5)
     nu : int
         degree of freedom parameter for Student-t distribution
-    sigma : (n x n) np.array (2d)
-        rank correlation matrix
+    f1 : float
+        first term of the Student-t probability density formula
+        1. / np.sqrt(sigma_det)
+    f2: float
+        second term of the Student-t probability density formula
+        gamma( (\nu + n) / 2) / gamma( \nu / 2)
+    f3: float
+        third term of the Student-t probability density formula
+        (gamma( \nu / 2 ) / gamma( (\nu + 1) / 2)) ^ n
+    sigma_det : float
+        determinant of rank correlation matrix sigma
+    sigma_inverse : (n x n) np.array (2d)
+        inverse of rank correlation matrix sigma
 
     Returns
     -------
-    copula density for one pseudo-sample
+    probability density for one pseudo-sample
 
-    '''
-    # f1 = 1st fraction, f2 = 2nd fraction, etc.
+    '''    
+    inv_cdf = np.matrix(t.ppf(uniform_pseudo_sample, nu)) # wrap in np.matrix to enable transpose
     
-    f1 = 1. / np.sqrt(np.linalg.det(sigma))
-    f2 = gamma((nu + n )/ 2.) / gamma(nu / 2.)
-    f3 = (gamma(nu / 2.) / gamma((nu + 1.) / 2.))**n
-    
-    inv_cdf = t.ppf(uniform_pseudo_sample, nu)
-    inv_sigma = np.linalg.inv(sigma)
-    
-    f4_num_f = (inv_cdf * inv_sigma * inv_cdf) / nu
-    f4_num = (1. + f4_num_f)**(-(nu + n)/2.)
+    f4_num_fraction = (inv_cdf * sigma_inverse * inv_cdf.T) / nu
+    f4_num = np.power(1. + f4_num_fraction, -(nu + n)/2.)
     
     f4_denom_list = [(1. + (t.ppf(u, nu)**2) / nu) for u in uniform_pseudo_sample]
-    f4_denom = (reduce((lambda x, y: x * y), f4_denom_list))**(-(nu + 1.) / 2.)
+    f4_denom = (reduce((lambda x, y: x * y), np.power(f4_denom_list, -(nu + 1.) / 2.)))
     
     density = f1 * f2 * f3 * f4_num / f4_denom
     
-    return density
+    return density.item()
     
     
-def symmetrize(a):
-    """
+def student_t_loglikelihood(pseudo_samples, nu, sigma):
+    '''
     
-    Return a symmetrized version of NumPy array a.
 
-    Values 0 are replaced by the array value at the symmetric
-    position (with respect to the diagonal), i.e. if a_ij = 0,
-    then the returned array a' is such that a'_ij = a_ji.
+    Parameters
+    ----------
+    pseudo_samples : pandas dataframe
+        pseudo samples, uniformly distributed, each row is one sample
+    nu : int
+        degree of freedom parameter for Student-t distribution
+    sigma : np.array of dimension n x n
+        n x n (symmetric) correlation matrix 
 
-    Diagonal values are left untouched.
+    Returns
+    -------
+    loglikelihood : float
+        estimation of the loglikelihood function to estimate
+        the degree-of-freedom parameter nu
 
-    a -- square NumPy array, such that a_ij = 0 or a_ji = 0, 
-    for i != j.
-    """
-    return a + a.T - np.diag(a.diagonal())
+    '''
 
+    n = pseudo_samples.shape[1]
+    # compute determinant and inverse of correlation matrix sigma once
+    
+    sigma_det = np.linalg.det(sigma)
+    sigma_inv = np.linalg.inv(sigma)
+    
+    # compute all components of the Student-t density formula that do not depend on the pseudo sample
+    f1 = 1. / np.sqrt(sigma_det)
+    f2 = gamma((nu + n )/ 2.) / gamma(nu / 2.)
+    f3 = np.power(gamma(nu / 2.) / gamma((nu + 1.) / 2.), n)
+    
+    np_pseudo_samples = pseudo_samples.to_numpy()
+    list_of_log_densities = [np.log(student_t_copula_density(this_sample, n, nu, f1, f2, f3, sigma_det, sigma_inv)) for this_sample in np_pseudo_samples]
+    loglikelihood = reduce((lambda x, y: x + y), list_of_log_densities)
+
+    return loglikelihood
+
+def maximum_likelihood_student_t_dof(pseudo_samples, sigma, plot_likelihood=False):
+    '''
+    Implements maximum likelihood estimation of Student-t distribution
+    degrees of freedom parameter \nu by varying \nu from 
+    1 to 30 and computing the corresponding log likelihood value 
+
+    Parameters
+    ----------
+    pseudo_samples : pandas dataframe
+        pseudo samples, uniformly distributed, each row is one sample
+    sigma : np.array of dimension n x n
+        n x n (symmetric) correlation matrix
+    plot_likelihood : BOOLEAN, optional
+        boolean to indicate whether a plot shall be drawn. 
+        The default is False.
+
+    Returns
+    -------
+    maximum_likelihood : TYPE
+        DESCRIPTION.
+
+    '''
+    
+    
+    maximum_likelihood
+    return maximum_likelihood    
