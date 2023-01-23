@@ -420,7 +420,9 @@ def maximum_likelihood_student_t_dof(pseudo_samples, sigma, plot_likelihood=Fals
         DESCRIPTION.
 
     '''
+
+    parameter_space_nu = list(range(1, 31))
     
-    
-    maximum_likelihood
+    maximum_likelihood = { nu : student_t_loglikelihood(pseudo_samples, nu, sigma) for nu in parameter_space_nu}
+
     return maximum_likelihood    

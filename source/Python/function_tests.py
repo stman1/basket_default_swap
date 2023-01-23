@@ -87,11 +87,11 @@ sigma_regular_dependence = np.array([[1., 0.2, 0.2, 0.2, 0.2],
        [0.2, 0.2, 0.2, 1., 0.2],
        [0.2, 0.2, 0.2, 0.2, 1.]])
 
-sigma_irregular_dependence = np.array([[1., 0.05, 0.85, 0.34, 0.19],
-       [0.05, 1., 0.08, 0.95, 0.5],
-       [0.85, 0.08, 1., 0.2, 0.2],
-       [0.34, 0.95, 0.2, 1., 0.2],
-       [0.19, 0.5, 0.2, 0.2, 1.]])
+sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
+       [0.8, 1., 0.8, 0.6, 0.4],
+       [0.6, 0.8, 1., 0.8, 0.6],
+       [0.4, 0.6, 0.8, 1., 0.8],
+       [0.2, 0.4, 0.6, 0.8, 1.]])
 
 # Assign sigma
 
@@ -125,6 +125,31 @@ print(f'***** TEST 6 ***** TEST MAXIMUM LIKELIHOOD ESTIMATION OF DEGREE OF FREED
 from functions import maximum_likelihood_student_t_dof
 
 
+sigma_independent = np.array([[1., 0., 0., 0., 0.],
+       [0., 1., 0., 0., 0.],
+       [0., 0., 1., 0., 0.],
+       [0., 0., 0., 1., 0.],
+       [0., 0., 0., 0., 1.]])
+
+sigma_regular_dependence = np.array([[1., 0.2, 0.2, 0.2, 0.2],
+       [0.2, 1., 0.2, 0.2, 0.2],
+       [0.2, 0.2, 1., 0.2, 0.2],
+       [0.2, 0.2, 0.2, 1., 0.2],
+       [0.2, 0.2, 0.2, 0.2, 1.]])
+
+sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
+       [0.8, 1., 0.8, 0.6, 0.4],
+       [0.6, 0.8, 1., 0.8, 0.6],
+       [0.4, 0.6, 0.8, 1., 0.8],
+       [0.2, 0.4, 0.6, 0.8, 1.]])
+
+sigma = sigma_irregular_dependence
+
+maximum_likelihood_dict = maximum_likelihood_student_t_dof(pseudo_sample_df, sigma, plot_likelihood=False)
+
+max_likelihood_nu = max(maximum_likelihood_dict, key=lambda key : maximum_likelihood_dict[key])
+
+print(f'maximum likelihood for dof parameter nu = {max_likelihood_nu}')
 
 
 
