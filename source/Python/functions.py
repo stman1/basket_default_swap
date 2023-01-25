@@ -9,11 +9,17 @@ Created on Sat Jan 14 09:32:46 2022
 import os
 import pandas as pd
 import numpy as np
+# Gamma function
 from scipy.special import gamma
+# Student-t distribution functions
 from scipy.stats import t
+# Sobol with direction numbers S. Joe and F. Y. Kuo
+from scipy.stats import qmc
 from functools import reduce
 from datetime import timedelta, datetime
 from math import log, exp
+
+import matplotlib.pylab as plt
 
 # functions
 
@@ -46,6 +52,12 @@ def sobol_sequence():
     None.
 
     '''
+    #sampler = qmc.Sobol(d=5, scramble=False)
+    #sample = sampler.random_base2(m=7)
+    #print(sample)
+
+    #print(qmc.discrepancy(sample))
+    
     pass
 
 def multivariate_random_normal(mu, sigma, num_simulations):
@@ -68,11 +80,7 @@ def multivariate_random_normal(mu, sigma, num_simulations):
     '''
     pass
 
-#sampler = qmc.Sobol(d=5, scramble=False)
-#sample = sampler.random_base2(m=7)
-#print(sample)
 
-#print(qmc.discrepancy(sample))
 
 
 #rng = np.random.default_rng(12345)
@@ -297,9 +305,10 @@ def linearize_spearman_correlation_matrix(spearman_corr_matrix):
     Returns
     -------
     linearised_corr_matrix : TYPE
-        a linearised spearman correlation matrix, 
+        a linearised spearman correlation matrix m(i,j), 
         where all off diagonal elemnents are linearised
-        by applying the function 2 x sin(pi / 6 * matrix_element)
+        by applying the function 2 x sin(pi / 6 * m(i, j))
+        to all (i, j) where i not equal j
 
     '''
     
@@ -425,4 +434,102 @@ def maximum_likelihood_student_t_dof(pseudo_samples, sigma, plot_likelihood=Fals
     
     maximum_likelihood = { nu : student_t_loglikelihood(pseudo_samples, nu, sigma) for nu in parameter_space_nu}
 
+    if plot_likelihood:
+        lists = sorted(maximum_likelihood.items()) 
+        x, y = zip(*lists)
+        plt.plot(x, y)
+        plt.show()
+
     return maximum_likelihood    
+
+
+def sampling_gaussian_copula(sigma):
+    '''
+    
+
+    Parameters
+    ----------
+    sigma : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    '''
+    
+    # 1. Do Cholesky factorization, obtain decomposed matrix A
+    
+    # 2. Sample independent uniformly distributed variables U
+    
+    # 3. Convert uniforms U from step 2. into Normal random variables Z (check Peter Jaeckel for recommended method)
+    
+    # 4. Convert into correlated normal X using X = AZ
+    
+    # 5. Use Normal CDF to convert back to uniform distribution U = Phi(X) 
+    
+    #return uniform_correlated_sample
+    pass
+
+
+def sampling_student_t_copula(sigma):
+    '''
+    
+
+    Parameters
+    ----------
+    sigma : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    '''
+
+
+   
+    # 1. Compute decomposition of correlation matrix b = AA0.
+    # 2. Draw an n-dimensional vector of independent standard Normal variables Z = (z1,       , zn)0.
+    # 3. Draw an independent chi-squared random variable s    2.
+    # 4. Compute n-dimensional Student’s t vector Y = Z=qs.
+    # 5. Impose correlation by X = AY.
+    # 6. Map to a correlated uniform vector by U = Tv (X) using t CDF.
+    
+    
+    pass
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

@@ -143,9 +143,9 @@ sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
        [0.4, 0.6, 0.8, 1., 0.8],
        [0.2, 0.4, 0.6, 0.8, 1.]])
 
-sigma = sigma_irregular_dependence
+sigma = sigma_regular_dependence
 
-maximum_likelihood_dict = maximum_likelihood_student_t_dof(pseudo_sample_df, sigma, plot_likelihood=False)
+maximum_likelihood_dict = maximum_likelihood_student_t_dof(pseudo_sample_df, sigma, plot_likelihood=True)
 
 max_likelihood_nu = max(maximum_likelihood_dict, key=lambda key : maximum_likelihood_dict[key])
 
