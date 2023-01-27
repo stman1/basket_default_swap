@@ -13,8 +13,8 @@ import numpy as np
 from scipy.special import gamma
 # Student-t distribution functions
 from scipy.stats import t
-# Sobol with direction numbers S. Joe and F. Y. Kuo
-from scipy.stats import qmc
+from scipy import stats 
+from scipy.stats import qmc # Sobol with direction numbers S. Joe and F. Y. Kuo
 from functools import reduce
 from datetime import timedelta, datetime
 from math import log, exp
@@ -443,14 +443,24 @@ def maximum_likelihood_student_t_dof(pseudo_samples, sigma, plot_likelihood=Fals
     return maximum_likelihood    
 
 
-def sampling_gaussian_copula(sigma):
+def sampling_gaussian_copula(sigma, power_of_two=7):
     '''
+    Implementation of sampling from Gaussian copula.
+    Returns the entire sample of correlated uniformly
+    distributed random variables.
+    The sample size must be a power of two in order for 
+    the Sobol sequence to keep its balance properties.
     
-
     Parameters
     ----------
-    sigma : TYPE
-        DESCRIPTION.
+    sigma : Array of float
+        Correlation matrix. Needs to be positive & semi-definite,
+        if not Cholesky decomposition will fail and raise a
+        LinAlg error
+    
+    power_of_two : int
+        determines the sample size, which is 2 ^ power_of_two. Default is 7,
+        returning a sample size of 2^7 = 128 samples
 
     Returns
     -------
@@ -459,17 +469,22 @@ def sampling_gaussian_copula(sigma):
     '''
     
     # 1. Do Cholesky factorization, obtain decomposed matrix A
+    cholesky_matrix_A = np.linalg.cholesky(sigma)
     
     # 2. Sample independent uniformly distributed variables U
+    sobol_object_5d = qmc.Sobol(d=5, scramble=True)
+    sobol_uniform_rvs = sobol_object_5d.random_base2(m=power_of_two)
     
     # 3. Convert uniforms U from step 2. into Normal random variables Z (check Peter Jaeckel for recommended method)
+    standard_normal_rvs = stats.norm().ppf(sobol_uniform_rvs)
     
     # 4. Convert into correlated normal X using X = AZ
+    correlated_normal_rvs = np.matmul(cholesky_matrix_A, standard_normal_rvs.T)
     
-    # 5. Use Normal CDF to convert back to uniform distribution U = Phi(X) 
+    # 5. Convert to correlated uniform vector by U = Phi(X), Phi being the standard normal CDF 
+    correlated_uniform_rvs = stats.norm().cdf(correlated_normal_rvs.T)
     
-    #return uniform_correlated_sample
-    pass
+    return correlated_uniform_rvs
 
 
 def sampling_student_t_copula(sigma):

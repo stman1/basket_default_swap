@@ -15,6 +15,29 @@ from scipy.special import gamma
 
 # Unit tests for functions
 
+# MOCK TEST OBJECTS 
+
+# create a fake correlation 
+sigma_independent = np.array([[1., 0., 0., 0., 0.],
+       [0., 1., 0., 0., 0.],
+       [0., 0., 1., 0., 0.],
+       [0., 0., 0., 1., 0.],
+       [0., 0., 0., 0., 1.]])
+
+sigma_regular_dependence = np.array([[1., 0.2, 0.2, 0.2, 0.2],
+       [0.2, 1., 0.2, 0.2, 0.2],
+       [0.2, 0.2, 1., 0.2, 0.2],
+       [0.2, 0.2, 0.2, 1., 0.2],
+       [0.2, 0.2, 0.2, 0.2, 1.]])
+
+sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
+       [0.8, 1., 0.8, 0.6, 0.4],
+       [0.6, 0.8, 1., 0.8, 0.6],
+       [0.4, 0.6, 0.8, 1., 0.8],
+       [0.2, 0.4, 0.6, 0.8, 1.]])
+
+
+
 print(f'***** TEST 1 ***** TEST INTEREST RATE CURVE PARSER ***** parse_interest_rate_curve *****')
 
 from functions import parse_interest_rate_curve
@@ -74,27 +97,7 @@ n = 5
 uniform_pseudo_sample = np.random.uniform(0, 1, n)
 nu = 1
 
-# create a fake correlation 
-sigma_independent = np.array([[1., 0., 0., 0., 0.],
-       [0., 1., 0., 0., 0.],
-       [0., 0., 1., 0., 0.],
-       [0., 0., 0., 1., 0.],
-       [0., 0., 0., 0., 1.]])
-
-sigma_regular_dependence = np.array([[1., 0.2, 0.2, 0.2, 0.2],
-       [0.2, 1., 0.2, 0.2, 0.2],
-       [0.2, 0.2, 1., 0.2, 0.2],
-       [0.2, 0.2, 0.2, 1., 0.2],
-       [0.2, 0.2, 0.2, 0.2, 1.]])
-
-sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
-       [0.8, 1., 0.8, 0.6, 0.4],
-       [0.6, 0.8, 1., 0.8, 0.6],
-       [0.4, 0.6, 0.8, 1., 0.8],
-       [0.2, 0.4, 0.6, 0.8, 1.]])
-
-# Assign sigma
-
+# Assign correlation matrix sigma
 sigma = sigma_independent
 
 sigma_det = np.linalg.det(sigma)
@@ -102,7 +105,7 @@ sigma_inverse = np.linalg.inv(sigma)
 
 # compute all components of the Student-t density formula that do not depend on the pseudo sample
 f1 = 1. / np.sqrt(sigma_det)
-f2 = gamma((nu + n )/ 2.) / gamma(nu / 2.)
+f2 = gamma((nu + n) / 2.) / gamma(nu / 2.)
 f3 = np.power(gamma(nu / 2.) / gamma((nu + 1.) / 2.), n)
 
 density = student_t_copula_density(uniform_pseudo_sample, n, nu, f1, f2, f3, sigma_det, sigma_inverse)
@@ -124,25 +127,6 @@ print(f'loglikelihood for dof parameter nu = {nu}: {loglikelihood}')
 print(f'***** TEST 6 ***** TEST MAXIMUM LIKELIHOOD ESTIMATION OF DEGREE OF FREEDOM PARAMETER FOR STUDENT T *****  *****')
 from functions import maximum_likelihood_student_t_dof
 
-
-sigma_independent = np.array([[1., 0., 0., 0., 0.],
-       [0., 1., 0., 0., 0.],
-       [0., 0., 1., 0., 0.],
-       [0., 0., 0., 1., 0.],
-       [0., 0., 0., 0., 1.]])
-
-sigma_regular_dependence = np.array([[1., 0.2, 0.2, 0.2, 0.2],
-       [0.2, 1., 0.2, 0.2, 0.2],
-       [0.2, 0.2, 1., 0.2, 0.2],
-       [0.2, 0.2, 0.2, 1., 0.2],
-       [0.2, 0.2, 0.2, 0.2, 1.]])
-
-sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
-       [0.8, 1., 0.8, 0.6, 0.4],
-       [0.6, 0.8, 1., 0.8, 0.6],
-       [0.4, 0.6, 0.8, 1., 0.8],
-       [0.2, 0.4, 0.6, 0.8, 1.]])
-
 sigma = sigma_regular_dependence
 
 maximum_likelihood_dict = maximum_likelihood_student_t_dof(pseudo_sample_df, sigma, plot_likelihood=True)
@@ -151,6 +135,17 @@ max_likelihood_nu = max(maximum_likelihood_dict, key=lambda key : maximum_likeli
 
 print(f'maximum likelihood for dof parameter nu = {max_likelihood_nu}')
 
+
+# TEST SAMPLING FROM GAUSSIAN COPULA
+print(f'***** TEST 7 ***** TEST SAMPLING FROM GAUSSIAN COPULA *****  *****')
+from functions import sampling_gaussian_copula
+
+# assign correlation matrix sigma
+correlation_matrix = sigma_regular_dependence
+
+correlated_uniform_sample = sampling_gaussian_copula(correlation_matrix, power_of_two = 4)
+
+print(f'Correlated uniform sample shape = {correlated_uniform_sample.shape}')
 
 
 
