@@ -464,7 +464,10 @@ def sampling_gaussian_copula(sigma, power_of_two=7):
 
     Returns
     -------
-    None.
+    correlated_uniform_rvs : float
+        correlated uniform random variables of dimension n x sample size
+        n : number of entities in the default basket
+        sample size is: 2 ** power_of_two
 
     '''
     
@@ -487,32 +490,44 @@ def sampling_gaussian_copula(sigma, power_of_two=7):
     return correlated_uniform_rvs
 
 
-def sampling_student_t_copula(sigma):
+def sampling_student_t_copula(sigma, nu):
     '''
     
 
     Parameters
     ----------
-    sigma : TYPE
-        DESCRIPTION.
+    sigma : Array of float
+        Correlation matrix. Needs to be positive & semi-definite,
+        if not Cholesky decomposition will fail and raise a
+        LinAlg error
+    nu : float
+        degrees of freedom parameter of Student-t distribution
 
     Returns
     -------
-    None.
+    correlated_uniform_rvs : float
+        correlated uniform random variables of dimension n x sample size
+        n : number of entities in the default basket
+        sample size is: 2 ** power_of_two
 
     '''
 
-
    
-    # 1. Compute decomposition of correlation matrix b = AA0.
-    # 2. Draw an n-dimensional vector of independent standard Normal variables Z = (z1,       , zn)0.
-    # 3. Draw an independent chi-squared random variable s    2.
-    # 4. Compute n-dimensional Student’s t vector Y = Z=qs.
+
+    # 1.1 apply linearization to off-diafonal elements before decomposition
+    cholesky_matrix_A = np.linalg.cholesky(sigma)    
+    # 1.2 Compute decomposition of correlation matrix sigma = A * A^T.
+
+    # 2.2 Draw an n-dimensional vector of independent standard Normal variables Z = (z_1, ... , z_n)^T
+    sobol_object_5d = qmc.Sobol(d=5, scramble=True)
+    sobol_uniform_rvs = sobol_object_5d.random_base2(m=power_of_two)
+    # 3. Draw an independent chi-squared random variable s ~ Chi^2_nu.
+    # 4. Compute n-dimensional Student’s t vector Y = Z / sqrt(s / nu).
     # 5. Impose correlation by X = AY.
-    # 6. Map to a correlated uniform vector by U = Tv (X) using t CDF.
+    # 6. Map to a correlated uniform vector by U = T_nu (X) using CDF of Student-t distribution.
     
-    
-    pass
+    return correlated_uniform_rvs
+
     
     
     

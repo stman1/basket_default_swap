@@ -17,7 +17,7 @@ from scipy.special import gamma
 
 # MOCK TEST OBJECTS 
 
-# create a fake correlation 
+# create mock correlation matrices
 sigma_independent = np.array([[1., 0., 0., 0., 0.],
        [0., 1., 0., 0., 0.],
        [0., 0., 1., 0., 0.],
