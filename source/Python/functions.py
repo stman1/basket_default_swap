@@ -290,7 +290,7 @@ def cds_bootstrapper(maturity, discount_factor, spread, recovery, plot_prob=Fals
 
     return df
 
-def linearize_spearman_correlation_matrix(spearman_corr_matrix):
+def linearise_spearman_correlation_matrix(spearman_corr_matrix):
     '''
     applies 'linearisation' to a spearman correlation matrix
     e.g. based on linear historical correlation of near uniformly
@@ -304,9 +304,9 @@ def linearize_spearman_correlation_matrix(spearman_corr_matrix):
 
     Returns
     -------
-    linearised_corr_matrix : TYPE
+    linearised_corr_matrix : np.array of floats
         a linearised spearman correlation matrix m(i,j), 
-        where all off diagonal elemnents are linearised
+        where all off diagonal elements are linearised
         by applying the function 2 x sin(pi / 6 * m(i, j))
         to all (i, j) where i not equal j
 
@@ -315,9 +315,9 @@ def linearize_spearman_correlation_matrix(spearman_corr_matrix):
     # create mask for off-diagonal elements
     mask = ~np.eye(spearman_corr_matrix.shape[0],dtype=bool)
     # apply linearization to all off-diagonal elements
-    linearized_corr_matrix = np.where(mask,(2* np.sin(spearman_corr_matrix * np.pi / 6) ).astype(float), spearman_corr_matrix)
+    linearised_corr_matrix = np.where(mask,(2* np.sin(spearman_corr_matrix * np.pi / 6) ).astype(float), spearman_corr_matrix)
 
-    return linearized_corr_matrix
+    return linearised_corr_matrix
 
     
 
@@ -443,24 +443,26 @@ def maximum_likelihood_student_t_dof(pseudo_samples, sigma, plot_likelihood=Fals
     return maximum_likelihood    
 
 
-def sampling_gaussian_copula(sigma, power_of_two=7):
+def sampling_gaussian_copula(sigma, dimension=5, power_of_two=7):
     '''
     Implementation of sampling from Gaussian copula.
     Returns the entire sample of correlated uniformly
     distributed random variables.
     The sample size must be a power of two in order for 
     the Sobol sequence to keep its balance properties.
+    Sobol numbers are scrambled to avoid drawing exactly zero.
     
     Parameters
     ----------
     sigma : Array of float
-        Correlation matrix. Needs to be positive & semi-definite,
+        Rank or linear correlation matrix. Needs to be positive & semi-definite,
         if not Cholesky decomposition will fail and raise a
-        LinAlg error
-    
-    power_of_two : int
-        determines the sample size, which is 2 ^ power_of_two. Default is 7,
-        returning a sample size of 2^7 = 128 samples
+        LinAlgError     
+    dimension : int, optional. Default is 5.
+        Number of stochastic variables to be drawn simultaneously.
+    power_of_two : int, optional. Default is 7.
+        determines the sample size, which is 2 ^ power_of_two. 
+        Per default returning a sample size of 2^7 = 128 samples
 
     Returns
     -------
@@ -475,10 +477,10 @@ def sampling_gaussian_copula(sigma, power_of_two=7):
     cholesky_matrix_A = np.linalg.cholesky(sigma)
     
     # 2. Sample independent uniformly distributed variables U
-    sobol_object_5d = qmc.Sobol(d=5, scramble=True)
+    sobol_object_5d = qmc.Sobol(d=dimension, scramble=True)
     sobol_uniform_rvs = sobol_object_5d.random_base2(m=power_of_two)
     
-    # 3. Convert uniforms U from step 2. into Normal random variables Z (check Peter Jaeckel for recommended method)
+    # 3. Convert uniforms U from step 2. into Normal random variables Z
     standard_normal_rvs = stats.norm().ppf(sobol_uniform_rvs)
     
     # 4. Convert into correlated normal X using X = AZ
@@ -490,46 +492,76 @@ def sampling_gaussian_copula(sigma, power_of_two=7):
     return correlated_uniform_rvs
 
 
-def sampling_student_t_copula(sigma, nu):
+def sampling_student_t_copula(sigma, nu, dimension=5, power_of_two=7):
     '''
+    Implementation of sampling from Student-t copula.
+    Returns the entire sample of correlated uniformly
+    distributed random variables.
+    The sample size must be a power of two in order for 
+    the Sobol sequence to keep its balance properties.
+    Sobol numbers are scrambled to avoid drawing exactly zero.
     
-
     Parameters
     ----------
     sigma : Array of float
-        Correlation matrix. Needs to be positive & semi-definite,
-        if not Cholesky decomposition will fail and raise a
-        LinAlg error
-    nu : float
+        Correlation matrix needs to be a rank correlation matrix. 
+        Needs to be positive and semi-definite;
+        if not Cholesky decomposition will fail and raise a numpy
+        LinAlgError
+    nu : int
         degrees of freedom parameter of Student-t distribution
+    dimension : int, optional. Default is 5.
+        Number of stochastic variables to be drawn simultaneously.
+    power_of_two : int, optional. Default is 7.
+            determines the sample size, which is 2 ^ power_of_two. 
+            Per default returning a sample size of 2^7 = 128 samples
+    
+
 
     Returns
     -------
     correlated_uniform_rvs : float
         correlated uniform random variables of dimension n x sample size
         n : number of entities in the default basket
-        sample size is: 2 ** power_of_two
+        Per default returning a sample size of 2^7=128 samples
 
     '''
 
+    # 1.1 apply linearization to off-diagonal elements before decomposition
    
-
-    # 1.1 apply linearization to off-diafonal elements before decomposition
-    cholesky_matrix_A = np.linalg.cholesky(sigma)    
-    # 1.2 Compute decomposition of correlation matrix sigma = A * A^T.
-
-    # 2.2 Draw an n-dimensional vector of independent standard Normal variables Z = (z_1, ... , z_n)^T
-    sobol_object_5d = qmc.Sobol(d=5, scramble=True)
+    # 1.2 Compute decomposition of correlation matrix sigma = A * A^T
+    cholesky_matrix_A = np.linalg.cholesky(sigma) 
+    
+    # 2.1 Sample independent uniformly distributed variables U
+    sobol_object_5d = qmc.Sobol(d=dimension, scramble=True)
     sobol_uniform_rvs = sobol_object_5d.random_base2(m=power_of_two)
-    # 3. Draw an independent chi-squared random variable s ~ Chi^2_nu.
-    # 4. Compute n-dimensional Student’s t vector Y = Z / sqrt(s / nu).
-    # 5. Impose correlation by X = AY.
-    # 6. Map to a correlated uniform vector by U = T_nu (X) using CDF of Student-t distribution.
     
-    return correlated_uniform_rvs
+    # 2.2 Draw an n-dimensional vector of independent standard Normal variables Z = (z_1, ... , z_n)^T
+    standard_normal_rvs = stats.norm().ppf(sobol_uniform_rvs)
+    
+    # 3. Draw independent chi-squared random variables s ~ Chi^2_nu
+    # 3.1 Draw a nu-dimensional vector of uniforms
+    sobol_object_nu_d = qmc.Sobol(d=nu, scramble=True)
+    sobol_uniform_2_normal_rvs = sobol_object_nu_d.random_base2(m=power_of_two)
+    
+    # 3.2 Convert to standard Normal
+    standard_normal_2_chi2_rvs = stats.norm().ppf(sobol_uniform_2_normal_rvs)
+    del(sobol_uniform_2_normal_rvs)
+    
+    # 3.3 Square and sum
+    chi2_rvs = np.sum(np.power(standard_normal_2_chi2_rvs, 2), axis=1)
+    del(standard_normal_2_chi2_rvs)
+    
+    # 4. Compute n-dimensional Student-t vector Y = Z / sqrt(s / nu)
+    student_t_rvs = standard_normal_rvs / np.sqrt(chi2_rvs[:, None] / nu)
+    
+    # 5. Impose correlation by X = AY
+    correlated_normal_rvs = np.matmul(cholesky_matrix_A, student_t_rvs.T)
+    
+    # 6. Map to a correlated uniform vector by U = T_nu (X) using the CDF of Student-t distribution
+    correlated_uniform_rvs = stats.t.cdf(correlated_normal_rvs.T, nu)
 
-    
-    
+    return correlated_uniform_rvs
     
     
     
