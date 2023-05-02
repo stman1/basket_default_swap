@@ -65,3 +65,61 @@ pseudo_sample_data_frame.corr()
 
 # SAMPLING FROM COPULA ALGORITHM
 
+
+# TEST SAMPLING FROM STUDENT-T COPULA
+print(f'***** TEST 9 ***** TEST BOOTSTRAPPING HAZARD RATES ***** cds_bootstrapper *****')
+from functions import cds_bootstrapper, loglinear_discount_factor
+
+# =============================================================================
+# cds_bootstrapper(maturity, discount_factor, spread, recovery, plot_prob=False, plot_hazard=False):
+#     '''
+#     Bootstrapping algorithm to extract implied hazard rates or implied survival probabilities.
+#     Uses a simplified CDS pricing approach, also known as the JP Morgan method.
+#     Has been shown to exactly match the results of CDS bootstrapping using the open source QuantLib library.
+# 
+#     Parameters
+#     ----------
+#     maturity : pandas dataframe column of float
+#         The maturities of the CDS contracts in years.
+#     discount_factor : pandas dataframe column of float
+#         Discount factors @ the maturities of the CDS contracts 
+#     spread : pandas dataframe column of float
+#         Quoted market spreads for the CDS contracts
+#     recovery : float
+#         the assumed recovery rate, a float value between 0.0 and 1.0
+#     plot_prob : boolean, optional
+#         Specifies whether a plot of survial shall be drawn. The default is False.
+#     plot_hazard : boolean, optional
+#         Specifies whether a plot of hazard rates shall be drawn. The default is False.
+# 
+#     Returns
+#     -------
+#     df : pandas dataframe
+#         fills the dataframe with survival / default probabilities, 
+#         hazard rates, marginal probability of default 
+#     '''
+# =============================================================================
+
+maturity = 5
+recovery = 0.4
+
+t = [1, 2, 3, 4, 5]
+prud = [29.5, 40.13, 50.6, 63.16, 74.18]
+bmw = [28, 37.92, 47.09, 58.16, 70.2]
+vw = [69.29, 81.66, 97, 111.93, 131.64]
+db = [85.5, 91.32, 97, 103.49, 111.45]
+ker = [13.28, 18.65, 24.05, 31.15, 38.24]
+df = loglinear_discount_factor(maturity, discount_factor, tenor)
+cds_df = pd.DataFrame({'Maturity' : t, 'prudential_spreads' : prud, 'bmw_spreads' : bmw, 'volkswagen_spreads' : vw, 'deutsche_bank' : db, 'kering' : ker, 'discount_factor': df})
+
+
+spreads_prudential = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.prudential_spreads, recovery)
+
+
+# assign correlation matrix sigma
+#correlation_matrix = sigma_regular_dependence
+
+#correlated_uniform_sample = sampling_student_t_copula(correlation_matrix, 7, dimension=5, power_of_two = 4)
+
+#print(f'Correlated uniform sample shape = {correlated_uniform_sample.shape}')
+
