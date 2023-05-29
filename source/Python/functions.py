@@ -171,7 +171,7 @@ def loglinear_discount_factor(maturity, discount_factor, tenor):
 
     Parameters
     ----------
-    maturity : list of float
+    maturity (in years): list of float
         [1, 15/12, 0.75, 21/12, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     discount_factor : list of float
         discount factors at tenor points of market quoted instruments
@@ -565,7 +565,72 @@ def sampling_student_t_copula(sigma, nu, dimension=5, power_of_two=7):
     
     
     
+def calc_premium_leg(recovery, expiry, default_times, payment_frequency, num_protected_defaults, interest_rate_curve):
+    '''
     
+
+    Parameters
+    ----------
+    recovery : TYPE
+        DESCRIPTION.
+    expiry : TYPE
+        DESCRIPTION.
+    default_times : TYPE
+        DESCRIPTION.
+    payment_frequency : TYPE
+        DESCRIPTION.
+    num_protected_defaults : TYPE
+        DESCRIPTION.        
+    interest_rate_curve : TYPE
+        DESCRIPTION.
+
+
+    Returns
+    -------
+    pv_premium_leg : TYPE
+        DESCRIPTION.
+
+    '''
+    
+    pv_premium_leg = 0
+    loss_given_default = 1 - recovery
+    
+    # sort default times in increasing order
+    default_times = np.sort(default_times)
+    
+    # time grid
+    time_grid = [ i / payment_frequency for i in range (1, expiry * payment_frequency + 1)]
+    
+    # discount factors at time grid points
+    discount_factors = np.array([loglinear_discount_factor(interest_rate_curve['Time To Maturity']/365, interest_rate_curve['Discount Factor ACT360'], t) for t in time_grid])
+    
+    # case 1: all default times are after expiry
+    
+    if default_times[-1] > expiry:
+        pv_premium_leg = loss_given_default * reduce(lambda a, b: a + b, discount_factors)
+            
+ 
+    # case 2: one or more defaults are before expiry
+    
+    default_times = np.transpose(np.tile(default_times, (discount_factors.shape[0], 1)))
+    
+
+    return pv_premium_leg
+
+
+
+def calc_default_leg():
+    '''
+    
+
+    Returns
+    -------
+    pv_default_leg : TYPE
+        DESCRIPTION.
+
+    '''
+
+    return pv_default_leg
     
     
     
