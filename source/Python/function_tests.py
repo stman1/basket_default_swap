@@ -38,22 +38,24 @@ sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
 
 
 
-print(f'***** TEST 1 ***** TEST INTEREST RATE CURVE PARSER ***** parse_interest_rate_curve *****')
-
-from functions import parse_interest_rate_curve
-work_dir = os.getcwd()
-cur_dir = os.chdir('../..')  # move two directories up
-data_set = 'final_basket'
-data_set_directory = os.chdir("%s%s%s"%('data','/', data_set)) 
-ir_data_frame = parse_interest_rate_curve(data_set_directory, 
-                                           'CDS_spreads_basket.xlsx', 
-                                           'ESTR', 
-                                           4, 
-                                           'B:E', 
-                                           ['Instr.Name', 'Close','START DATE','Mat.Dat'])
-
-print(f'raw interest rates: {ir_data_frame}')
-
+# =============================================================================
+# print(f'***** TEST 1 ***** TEST INTEREST RATE CURVE PARSER ***** parse_interest_rate_curve *****')
+# 
+# from functions import parse_interest_rate_curve
+# work_dir = os.getcwd()
+# cur_dir = os.chdir('../..')  # move two directories up
+# data_set = 'final_basket'
+# data_set_directory = os.chdir("%s%s%s"%('data','/', data_set)) 
+# ir_data_frame = parse_interest_rate_curve(data_set_directory, 
+#                                            'CDS_spreads_basket.xlsx', 
+#                                            'ESTR', 
+#                                            4, 
+#                                            'B:E', 
+#                                            ['Instr.Name', 'Close','START DATE','Mat.Dat'])
+# 
+# print(f'raw interest rates: {ir_data_frame}')
+# 
+# =============================================================================
 # Test linearisation of rank correlation matrix
 # print(f'***** TEST 2 ***** LINEARISATION OF SPEARMAN RANK CORRELATION MATRIX ***** linearise_spearman_correlation_matrix *****')
 # from functions import linearise_spearman_correlation_matrix
@@ -79,17 +81,19 @@ print(f'raw interest rates: {ir_data_frame}')
 # 
 # TEST OF LOG-LINEAR INTERPOLATION OF DISCOUNT FACTORS
   
-print(f'***** TEST 3 ***** TEST OF LOG-LINEAR INTERPOLATION OF DISCOUNT FACTORS ***** loglinear_discount_factor *****')
-from functions import loglinear_discount_factor
-maturity = [0.5/12, 0.75/12, 1/12, 1/6, 1/4, 1/3, 5/12, 6/12, 7/12, 8/12, 9/12, 10/12, 11/12, 1, 15/12, 0.75, 21/12, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20, 25, 30]
-t = np.arange(29)
-cds_discount_factors = np.zeros(len(t))  
-for i in range(0, len(t)):
-    cds_discount_factors[i] = loglinear_discount_factor(maturity, ir_data_frame['Discount Factor ACT360'], t[i])
-      
-print(f'discount factors: {cds_discount_factors}')
- 
- 
+# =============================================================================
+# print(f'***** TEST 3 ***** TEST OF LOG-LINEAR INTERPOLATION OF DISCOUNT FACTORS ***** loglinear_discount_factor *****')
+# from functions import loglinear_discount_factor
+# maturity = [0.5/12, 0.75/12, 1/12, 1/6, 1/4, 1/3, 5/12, 6/12, 7/12, 8/12, 9/12, 10/12, 11/12, 1, 15/12, 0.75, 21/12, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 20, 25, 30]
+# t = np.arange(29)
+# cds_discount_factors = np.zeros(len(t))  
+# for i in range(0, len(t)):
+#     cds_discount_factors[i] = loglinear_discount_factor(maturity, ir_data_frame['Discount Factor ACT360'], t[i])
+#       
+# print(f'discount factors: {cds_discount_factors}')
+#  
+#  
+# =============================================================================
 # # TEST STUDENT T DENSITY CALCULATOR
 # print(f'***** TEST 4 ***** TEST STUDENT-T DENSITY CALCULATOR ***** student_t_copula_density *****')
 # from functions import student_t_copula_density
@@ -172,7 +176,7 @@ from functions import parse_interest_rate_curve, calc_premium_leg
 
 recovery = 0.4 
 expiry = 5 # in years
-payment_frequency = 4 # how often default is observed / payments are done
+payment_frequency = 4 # how often default is observed / payments are scheduled
 
 # get interest rate curve
 
@@ -189,7 +193,17 @@ interest_rate_curve = parse_interest_rate_curve(data_set_directory,
 
 # Case 1: All defaults > expiry
 
-default_times = np.array([9, 7, 6, 5.5, 8]) # all default times > expiry, unsorted
+# default_times = np.array([9, 7, 6, 5.5, 8]) # all default times > expiry, unsorted
+
+# num_protected_defaults = 1 # 1st to default 
+
+# pv_premium_leg = calc_premium_leg(recovery, expiry, default_times, payment_frequency, num_protected_defaults, interest_rate_curve)
+
+# print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
+
+# Case 2: One or more defaults < expiry
+
+default_times = np.array([9, 7, 6, 2.7, 1.49]) # all default times > expiry, unsorted
 
 num_protected_defaults = 1 # 1st to default 
 
@@ -197,8 +211,7 @@ pv_premium_leg = calc_premium_leg(recovery, expiry, default_times, payment_frequ
 
 print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
 
-# Case 2: One or more defaults < expiry
-
+# default_times = np.array([9, 3.5, 6, 5.5, 8]) 
 
 
 # 

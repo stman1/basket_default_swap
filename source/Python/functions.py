@@ -598,8 +598,27 @@ def calc_premium_leg(recovery, expiry, default_times, payment_frequency, num_pro
     # sort default times in increasing order
     default_times = np.sort(default_times)
     
+    # number of time points
+    num_time_points = expiry * payment_frequency
+    
     # time grid
-    time_grid = [ i / payment_frequency for i in range (1, expiry * payment_frequency + 1)]
+    time_grid = np.array([ i / payment_frequency for i in range (1, num_time_points + 1)])
+    
+    default_times_indices = np.sort(time_grid.searchsorted(default_times))
+    # make indices 1. 0:4 2. 5:10 3. 11:19    
+    
+    # notional grid
+           
+    notional_structure = np.ones(num_time_points)
+    current_notional = 1
+    size_basket = 5
+    
+    
+    for this_default_time_index in default_times_indices:
+        current_notional -= 1/size_basket
+        notional_structure[this_default_time_index:] = current_notional
+    
+
     
     # discount factors at time grid points
     discount_factors = np.array([loglinear_discount_factor(interest_rate_curve['Time To Maturity']/365, interest_rate_curve['Discount Factor ACT360'], t) for t in time_grid])
@@ -610,9 +629,8 @@ def calc_premium_leg(recovery, expiry, default_times, payment_frequency, num_pro
         pv_premium_leg = loss_given_default * reduce(lambda a, b: a + b, discount_factors)
             
  
-    # case 2: one or more defaults are before expiry
-    
-    default_times = np.transpose(np.tile(default_times, (discount_factors.shape[0], 1)))
+    # case 2: one or more defaults occur before expiry
+    # default_times = np.transpose(np.tile(default_times, (discount_factors.shape[0], 1)))
     
 
     return pv_premium_leg
@@ -629,8 +647,9 @@ def calc_default_leg():
         DESCRIPTION.
 
     '''
+    pass
 
-    return pv_default_leg
+    #return pv_default_leg
     
     
     
