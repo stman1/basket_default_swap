@@ -174,7 +174,6 @@ from functions import parse_interest_rate_curve, calc_premium_leg
 
 # general input arguments
 
-recovery = 0.4 
 expiry = 5 # in years
 payment_frequency = 4 # how often default is observed / payments are scheduled
 
@@ -191,25 +190,33 @@ interest_rate_curve = parse_interest_rate_curve(data_set_directory,
                                            'B:E', 
                                            ['Instr.Name', 'Close','START DATE','Mat.Dat'])
 
-# Case 1: All defaults > expiry
-
+# =============================================================================
+# # Case 1: All defaults > expiry
+# print('Case 1: All defaults > expiry')
 # default_times = np.array([9, 7, 6, 5.5, 8]) # all default times > expiry, unsorted
-
-# num_protected_defaults = 1 # 1st to default 
-
-# pv_premium_leg = calc_premium_leg(recovery, expiry, default_times, payment_frequency, num_protected_defaults, interest_rate_curve)
-
+# k = 1 # 1st to default, number of protected defaults before the cds expires is 1 
+# pv_premium_leg = calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve)
 # print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
+# =============================================================================
 
-# Case 2: One or more defaults < expiry
 
-default_times = np.array([9, 7, 6, 2.7, 1.49]) # all default times > expiry, unsorted
+# =============================================================================
+# # Case 2: One or more defaults before expiry, k > number of defaults (two defaults < expiry, k = 3)
+# print(' Case 2: One or more defaults < expiry')
+# default_times = np.array([9, 7, 6, 2.7, 1.49]) # all default times > expiry, unsorted
+# k = 3 # 1st to default 
+# pv_premium_leg = calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve)
+# print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
+# =============================================================================
 
-num_protected_defaults = 1 # 1st to default 
 
-pv_premium_leg = calc_premium_leg(recovery, expiry, default_times, payment_frequency, num_protected_defaults, interest_rate_curve)
-
+# Case 3: One or more defaults < expiry and k = 2
+print(' Case 2: One or more defaults < expiry')
+default_times = np.array([9, 7, 3.2, 2.7, 1.45]) # all default times > expiry, unsorted
+k = 2 # 2nd to default 
+pv_premium_leg = calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve)
 print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
+
 
 # default_times = np.array([9, 3.5, 6, 5.5, 8]) 
 

@@ -565,7 +565,7 @@ def sampling_student_t_copula(sigma, nu, dimension=5, power_of_two=7):
     
     
     
-def calc_premium_leg(recovery, expiry, default_times, payment_frequency, num_protected_defaults, interest_rate_curve):
+def calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve):
     '''
     
 
@@ -579,59 +579,81 @@ def calc_premium_leg(recovery, expiry, default_times, payment_frequency, num_pro
         DESCRIPTION.
     payment_frequency : TYPE
         DESCRIPTION.
-    num_protected_defaults : TYPE
-        DESCRIPTION.        
+    k  : int
+        number of protected defaults.        
     interest_rate_curve : TYPE
         DESCRIPTION.
 
 
     Returns
     -------
-    pv_premium_leg : TYPE
-        DESCRIPTION.
+    pv_premium_leg : float
+        the present value of the premium leg
 
     '''
     
     pv_premium_leg = 0
-    loss_given_default = 1 - recovery
-    
-    # sort default times in increasing order
-    default_times = np.sort(default_times)
-    
-    # number of time points
-    num_time_points = expiry * payment_frequency
-    
-    # time grid
-    time_grid = np.array([ i / payment_frequency for i in range (1, num_time_points + 1)])
-    
-    default_times_indices = np.sort(time_grid.searchsorted(default_times))
-    # make indices 1. 0:4 2. 5:10 3. 11:19    
-    
-    # notional grid
-           
-    notional_structure = np.ones(num_time_points)
     current_notional = 1
     size_basket = 5
     
+    num_defaults = np.count_nonzero(default_times < expiry)
     
-    for this_default_time_index in default_times_indices:
-        current_notional -= 1/size_basket
-        notional_structure[this_default_time_index:] = current_notional
+    if num_defaults > 0:
+        # sort default times in increasing order
+        default_times = np.sort(default_times)
     
-
+    
+    # Case 1: all default times are after expiry
+    
+    #### TO BE MOVED OUTSIDE OF THIS FUNCTION AND PASSED AS ARGUMENT
+    # number of time points
+    grid_size = expiry * payment_frequency
+    
+    # time grid
+    time_grid = np.array([ i / payment_frequency for i in range (0, grid_size + 1)])
+    
+    # the dts
+    time_delta = np.diff(time_grid, n=1, axis=0)
+    ####
     
     # discount factors at time grid points
+    
+    #### TO BE MOVED OUTSIDE OF THIS FUNCTION AND PASSED AS ARGUMENT
     discount_factors = np.array([loglinear_discount_factor(interest_rate_curve['Time To Maturity']/365, interest_rate_curve['Discount Factor ACT360'], t) for t in time_grid])
+    ####
     
-    # case 1: all default times are after expiry
+    if num_defaults == 0:
+        arguments = time_delta, discount_factors[1:]
+        pv_premium_leg = sum(reduce(lambda a, b: a * b, data) for data in zip(*arguments))
+        return pv_premium_leg
+        
     
-    if default_times[-1] > expiry:
-        pv_premium_leg = loss_given_default * reduce(lambda a, b: a + b, discount_factors)
-            
- 
-    # case 2: one or more defaults occur before expiry
-    # default_times = np.transpose(np.tile(default_times, (discount_factors.shape[0], 1)))
+    # Cases 2 and 3: one or more defaults occur before expiry
     
+    default_times_indices = np.sort(time_grid.searchsorted(default_times))   
+    
+    # notional grid           
+    notional_structure = np.ones(grid_size)
+
+    # reduce notional proportionally for each occured default before expiry
+    for this_default_time_index in default_times_indices:
+        if this_default_time_index < grid_size:
+            current_notional -= 1/size_basket
+            notional_structure[this_default_time_index:] = current_notional
+        else:
+            break
+    
+    if num_defaults <= k:
+        # Case 2: all defaults are protected, that is: num_defaults <= k, no early expiry     
+        arguments = time_delta, discount_factors[1:], notional_structure[1:]
+        pv_premium_leg = sum(reduce(lambda a, b: a * b, data) for data in zip(*arguments))
+    else:
+        last_protected_default_time_index = default_times_indices[k-1]
+        arguments = time_delta[0:last_protected_default_time_index], discount_factors[1:last_protected_default_time_index], notional_structure[1:last_protected_default_time_index]
+        pv_premium_leg = sum(reduce(lambda a, b: a * b, data) for data in zip(*arguments))
+        
+    
+    # Case 3: more defaults occur than are protected, that is: num_defaults > k, early expiry
 
     return pv_premium_leg
 
