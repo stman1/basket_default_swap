@@ -167,15 +167,77 @@ sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
 # print(f'Correlated uniform sample shape = {correlated_uniform_sample.shape}')
 # =============================================================================
 
-# TEST PREMIUM LEG COMPUTATION
 # =============================================================================
-print(f'***** TEST 9 ***** TEST PREMIUM LEG COMPUTATION ***** premium_leg *****')
-from functions import parse_interest_rate_curve, calc_premium_leg
+# # TEST PREMIUM LEG COMPUTATION
+# # =============================================================================
+# print('***** TEST 9 ***** TEST PREMIUM LEG COMPUTATION ***** premium_leg *****')
+# from functions import parse_interest_rate_curve, calc_premium_leg
+# 
+# # general input arguments
+# 
+# expiry = 5 # in years
+# payment_frequency = 4 # how often default is observed / payments are scheduled
+# 
+# # get interest rate curve
+# 
+# work_dir = os.getcwd()
+# cur_dir = os.chdir('../..')  # move two directories up
+# data_set = 'final_basket'
+# data_set_directory = os.chdir("%s%s%s"%('data','/', data_set)) 
+# interest_rate_curve = parse_interest_rate_curve(data_set_directory, 
+#                                            'CDS_spreads_basket.xlsx', 
+#                                            'TEST_CURVE', 
+#                                            4, 
+#                                            'B:E', 
+#                                            ['Instr.Name', 'Close','START DATE','Mat.Dat'])
+# 
+# # Case 1: All defaults after expiry
+# print('Case 1: All defaults after expiry')
+# default_times = np.array([9, 7, 6, 5.5, 8]) # all default times > expiry, unsorted
+# k = 1 # 1st to default, number of protected defaults before the cds expires is 1 
+# pv_premium_leg = calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve)
+# print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
+# 
+# 
+# # Case 2: defaults occur before expiry, all are protected (two defaults before expiry, k = 3)
+# print(' Case 2: One or more defaults before expiry, all are protected (two defaults before expiry, k = 3)')
+# default_times = np.array([9, 7, 3.2, 2.7, 1.49]) # at least one default occurs before expiry
+# k = 3 # 1st to default 
+# pv_premium_leg = calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve)
+# print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
+# 
+# 
+# # Case 3: defaults occur before expiry and not all are protected
+# print(' Case 3: defaults occur before expiry and not all are protected (two defaults before expiry, k = 2)')
+# default_times = np.array([9, 7, 3.2, 2.7, 1.45]) # all default times > expiry, unsorted
+# k = 2 # 2nd to default 
+# pv_premium_leg = calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve)
+# print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
+# 
+# 
+# # default_times = np.array([9, 3.5, 6, 5.5, 8]) 
+# 
+# 
+# # 
+# # # assign correlation matrix sigma
+# # correlation_matrix = sigma_regular_dependence
+# # 
+# # correlated_uniform_sample = sampling_student_t_copula(correlation_matrix, 7, dimension=5, power_of_two = 4)
+# # 
+# # print(f'Correlated uniform sample shape = {correlated_uniform_sample.shape}')
+# # =============================================================================
+
+
+# =============================================================================
+# TEST DEFAULT LEG COMPUTATION
+# =============================================================================
+print('***** TEST 9 ***** TEST DEFAULT LEG COMPUTATION ***** default_leg *****')
+from functions import parse_interest_rate_curve, calc_default_leg
 
 # general input arguments
 
 expiry = 5 # in years
-payment_frequency = 4 # how often default is observed / payments are scheduled
+recovery_rate = 0.4
 
 # get interest rate curve
 
@@ -185,50 +247,26 @@ data_set = 'final_basket'
 data_set_directory = os.chdir("%s%s%s"%('data','/', data_set)) 
 interest_rate_curve = parse_interest_rate_curve(data_set_directory, 
                                            'CDS_spreads_basket.xlsx', 
-                                           'ESTR', 
+                                           'TEST_CURVE', 
                                            4, 
                                            'B:E', 
                                            ['Instr.Name', 'Close','START DATE','Mat.Dat'])
 
 # =============================================================================
-# # Case 1: All defaults > expiry
-# print('Case 1: All defaults > expiry')
-# default_times = np.array([9, 7, 6, 5.5, 8]) # all default times > expiry, unsorted
-# k = 1 # 1st to default, number of protected defaults before the cds expires is 1 
-# pv_premium_leg = calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve)
-# print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
+# print(' Case 1: All defaults occur after expiry')
+# default_times = np.array([9, 7, 6, 5.5, 8]) # all default times after expiry, unsorted
+# k = 2 # 2nd to default
+# weights = [0.2, 0.2, 0.2, 0.2, 0.2] 
+# pv_default_leg = calc_default_leg(expiry, default_times, recovery_rate, weights, k, interest_rate_curve)
+# print(f'PV Default leg = pv_default_leg = {pv_default_leg}')
 # =============================================================================
 
-
-# =============================================================================
-# # Case 2: One or more defaults before expiry, k > number of defaults (two defaults < expiry, k = 3)
-# print(' Case 2: One or more defaults < expiry')
-# default_times = np.array([9, 7, 6, 2.7, 1.49]) # all default times > expiry, unsorted
-# k = 3 # 1st to default 
-# pv_premium_leg = calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve)
-# print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
-# =============================================================================
-
-
-# Case 3: One or more defaults < expiry and k = 2
-print(' Case 2: One or more defaults < expiry')
-default_times = np.array([9, 7, 3.2, 2.7, 1.45]) # all default times > expiry, unsorted
-k = 2 # 2nd to default 
-pv_premium_leg = calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve)
-print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
-
-
-# default_times = np.array([9, 3.5, 6, 5.5, 8]) 
-
-
-# 
-# # assign correlation matrix sigma
-# correlation_matrix = sigma_regular_dependence
-# 
-# correlated_uniform_sample = sampling_student_t_copula(correlation_matrix, 7, dimension=5, power_of_two = 4)
-# 
-# print(f'Correlated uniform sample shape = {correlated_uniform_sample.shape}')
-# =============================================================================
+print(' Case 2: At least one default occurs before expiry')
+default_times = np.array([9, 7, 3.2, 2.7, 1.49]) # at least one default occurs before expiry
+k = 2 # 2nd to default
+weights = [0.2, 0.2, 0.2, 0.2, 0.2] 
+pv_default_leg = calc_default_leg(expiry, default_times, recovery_rate, weights, k, interest_rate_curve)
+print(f'PV Default leg = pv_default_leg = {pv_default_leg}')
 
 
 

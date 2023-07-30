@@ -567,28 +567,25 @@ def sampling_student_t_copula(sigma, nu, dimension=5, power_of_two=7):
     
 def calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve):
     '''
-    
+    Computes the present value of the premium leg of the basket CDS.
 
     Parameters
     ----------
-    recovery : TYPE
-        DESCRIPTION.
-    expiry : TYPE
-        DESCRIPTION.
-    default_times : TYPE
-        DESCRIPTION.
-    payment_frequency : TYPE
-        DESCRIPTION.
+    expiry : float
+        as seen from the valuation date, the time to expiry denominated in years / year fractions
+    default_times : float
+        as seen from the valuation date, the default times denominated in years / year fractions
+    payment_frequency : int
+        the number of times per annum premium payments are made (4 == quarterly payments)
     k  : int
         number of protected defaults.        
-    interest_rate_curve : TYPE
-        DESCRIPTION.
-
-
+    interest_rate_curve : pandas dataframe
+        dataframe containing zero rates, discount factors, etc.
+       
     Returns
     -------
     pv_premium_leg : float
-        the present value of the premium leg
+        present value of the premium leg
 
     '''
     
@@ -598,12 +595,12 @@ def calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_
     
     num_defaults = np.count_nonzero(default_times < expiry)
     
+    # sort default times in increasing order
     if num_defaults > 0:
-        # sort default times in increasing order
         default_times = np.sort(default_times)
     
     
-    # Case 1: all default times are after expiry
+
     
     #### TO BE MOVED OUTSIDE OF THIS FUNCTION AND PASSED AS ARGUMENT
     # number of time points
@@ -612,7 +609,7 @@ def calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_
     # time grid
     time_grid = np.array([ i / payment_frequency for i in range (0, grid_size + 1)])
     
-    # the dts
+    # the time steps 'dt'
     time_delta = np.diff(time_grid, n=1, axis=0)
     ####
     
@@ -622,6 +619,7 @@ def calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_
     discount_factors = np.array([loglinear_discount_factor(interest_rate_curve['Time To Maturity']/365, interest_rate_curve['Discount Factor ACT360'], t) for t in time_grid])
     ####
     
+    # Case 1: all default times are after expiry
     if num_defaults == 0:
         arguments = time_delta, discount_factors[1:]
         pv_premium_leg = sum(reduce(lambda a, b: a * b, data) for data in zip(*arguments))
@@ -629,49 +627,74 @@ def calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_
         
     
     # Cases 2 and 3: one or more defaults occur before expiry
-    
     default_times_indices = np.sort(time_grid.searchsorted(default_times))   
     
     # notional grid           
     notional_structure = np.ones(grid_size)
 
     # reduce notional proportionally for each occured default before expiry
-    for this_default_time_index in default_times_indices:
+    # assumes that each name has the same notional (or weight) in the basket
+    for this_default_time_index in default_times_indices[0:k-1]:
         if this_default_time_index < grid_size:
             current_notional -= 1/size_basket
-            notional_structure[this_default_time_index:] = current_notional
+            notional_structure[this_default_time_index-1:] = current_notional
         else:
             break
-    
-    if num_defaults <= k:
-        # Case 2: all defaults are protected, that is: num_defaults <= k, no early expiry     
-        arguments = time_delta, discount_factors[1:], notional_structure[1:]
+        
+    # Case 2: all defaults are protected, that is: num_defaults <= k, no early expiry   
+    if num_defaults <= k: 
+        arguments = time_delta, discount_factors[1:], notional_structure
         pv_premium_leg = sum(reduce(lambda a, b: a * b, data) for data in zip(*arguments))
-    else:
+    # Case 3: number of defaults before expiry is higher than number of protected defaults: num_defaults > k, early expiry 
+    else:   
         last_protected_default_time_index = default_times_indices[k-1]
-        arguments = time_delta[0:last_protected_default_time_index], discount_factors[1:last_protected_default_time_index], notional_structure[1:last_protected_default_time_index]
+        arguments = time_delta[0:last_protected_default_time_index], discount_factors[1:last_protected_default_time_index+1], notional_structure[0:last_protected_default_time_index]
         pv_premium_leg = sum(reduce(lambda a, b: a * b, data) for data in zip(*arguments))
         
-    
-    # Case 3: more defaults occur than are protected, that is: num_defaults > k, early expiry
-
     return pv_premium_leg
 
 
 
-def calc_default_leg():
+def calc_default_leg(expiry, default_times, recovery_rate, weights, k, interest_rate_curve):
     '''
-    
-
-    Returns
-    -------
-    pv_default_leg : TYPE
+    Computes the present value of the default leg of the basket CDS.
+    Parameters
+    ----------
+    expiry : float
+        as seen from the valuation date, the time to expiry denominated in years / year fractions
+    default_times : float
+        as seen from the valuation date, the default times denominated in years / year fractions
+    recovery_rate : float
+        the fraction of the loss recovered in case of default as a percentage 
+    weights : TYPE
         DESCRIPTION.
+    k  : int
+        number of protected defaults. 
+    interest_rate_curve : pandas dataframe
+        dataframe containing zero rates, discount factors, etc.
+
+     Returns
+     -------
+     pv_default_leg : float
+         present value of the default leg
 
     '''
-    pass
-
-    #return pv_default_leg
+    num_defaults = np.count_nonzero(default_times < expiry)
+    # sort default times in increasing order
+    if num_defaults > 0:
+        default_times = np.sort(default_times)
+        
+    kth_default_idx = k - 1
+    kth_default_time = default_times[kth_default_idx]
+    
+    if (num_defaults == 0):
+        pv_default_leg = 0
+    else:
+        discount_factor = loglinear_discount_factor(interest_rate_curve['Time To Maturity']/365, interest_rate_curve['Discount Factor ACT360'], kth_default_time)
+        pv_default_leg = (1. - recovery_rate) * weights[kth_default_idx] * discount_factor
+    
+    
+    return pv_default_leg
     
     
     
