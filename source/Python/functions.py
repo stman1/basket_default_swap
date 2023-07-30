@@ -599,9 +599,6 @@ def calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_
     if num_defaults > 0:
         default_times = np.sort(default_times)
     
-    
-
-    
     #### TO BE MOVED OUTSIDE OF THIS FUNCTION AND PASSED AS ARGUMENT
     # number of time points
     grid_size = expiry * payment_frequency
@@ -653,11 +650,85 @@ def calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_
         
     return pv_premium_leg
 
+def calc_premium_leg_fast(default_times_sorted, num_defaults, payment_frequency, k, interest_rate_curve, grid_size, time_grid, time_delta, discount_factors):
+    '''
+    Fast version of the premium leg computation of the basket CDS.
+    Precomputes inputs such as time grid and discount factors to speed up computations.
 
+    Parameters
+    ----------
+    default_times_sorted : TYPE
+        DESCRIPTION.
+    num_defaults : TYPE
+        DESCRIPTION.
+    payment_frequency : TYPE
+        DESCRIPTION.
+    k : TYPE
+        DESCRIPTION.
+    interest_rate_curve : TYPE
+        DESCRIPTION.
+    grid_size : TYPE
+        DESCRIPTION.
+    time_grid : TYPE
+        DESCRIPTION.
+    time_delta : TYPE
+        DESCRIPTION.
+    discount_factors : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    pv_premium_leg : float
+        present value of the premium leg
+
+    '''
+    
+    pv_premium_leg = 0
+    current_notional = 1
+    size_basket = 5
+            
+    # Case 1: all default times are after expiry
+    if num_defaults == 0:
+        arguments = time_delta, discount_factors[1:]
+        pv_premium_leg = sum(reduce(lambda a, b: a * b, data) for data in zip(*arguments))
+        return pv_premium_leg
+        
+    
+    # Cases 2 and 3: one or more defaults occur before expiry
+    default_time_indices = np.sort(time_grid.searchsorted(default_times_sorted))   
+    
+    # notional grid           
+    notional_structure = np.ones(grid_size)
+
+    # reduce notional proportionally for each occured default before expiry
+    # assumes that each name has the same notional (or weight) in the basket
+    for this_default_time_index in default_time_indices[0:k-1]:
+        if this_default_time_index < grid_size:
+            current_notional -= 1/size_basket
+            notional_structure[this_default_time_index-1:] = current_notional
+        else:
+            break
+        
+    # Case 2: all defaults are protected, that is: num_defaults <= k, no early expiry   
+    if num_defaults <= k: 
+        arguments = time_delta, discount_factors[1:], notional_structure
+        pv_premium_leg = sum(reduce(lambda a, b: a * b, data) for data in zip(*arguments))
+    # Case 3: number of defaults before expiry is higher than number of protected defaults: num_defaults > k, early expiry 
+    else:   
+        last_protected_default_time_index = default_time_indices[k-1]
+        arguments = time_delta[0:last_protected_default_time_index], discount_factors[1:last_protected_default_time_index+1], notional_structure[0:last_protected_default_time_index]
+        pv_premium_leg = sum(reduce(lambda a, b: a * b, data) for data in zip(*arguments))
+        
+    return pv_premium_leg
+    
+    
+    
+    
 
 def calc_default_leg(expiry, default_times, recovery_rate, weights, k, interest_rate_curve):
     '''
     Computes the present value of the default leg of the basket CDS.
+    
     Parameters
     ----------
     expiry : float

@@ -201,7 +201,7 @@ sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
 # 
 # # Case 2: defaults occur before expiry, all are protected (two defaults before expiry, k = 3)
 # print(' Case 2: One or more defaults before expiry, all are protected (two defaults before expiry, k = 3)')
-# default_times = np.array([9, 7, 3.2, 2.7, 1.49]) # at least one default occurs before expiry
+# default_times = np.array([9, 7, 3.2, 2.7, 1.45]) # at least one default occurs before expiry
 # k = 3 # 1st to default 
 # pv_premium_leg = calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve)
 # print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')

@@ -70,36 +70,6 @@ pseudo_sample_data_frame.corr()
 print(f'***** TEST 9 ***** TEST BOOTSTRAPPING HAZARD RATES ***** cds_bootstrapper *****')
 from functions import cds_bootstrapper, loglinear_discount_factor
 
-# =============================================================================
-# cds_bootstrapper(maturity, discount_factor, spread, recovery, plot_prob=False, plot_hazard=False):
-#     '''
-#     Bootstrapping algorithm to extract implied hazard rates or implied survival probabilities.
-#     Uses a simplified CDS pricing approach, also known as the JP Morgan method.
-#     Has been shown to exactly match the results of CDS bootstrapping using the open source QuantLib library.
-# 
-#     Parameters
-#     ----------
-#     maturity : pandas dataframe column of float
-#         The maturities of the CDS contracts in years.
-#     discount_factor : pandas dataframe column of float
-#         Discount factors @ the maturities of the CDS contracts 
-#     spread : pandas dataframe column of float
-#         Quoted market spreads for the CDS contracts
-#     recovery : float
-#         the assumed recovery rate, a float value between 0.0 and 1.0
-#     plot_prob : boolean, optional
-#         Specifies whether a plot of survial shall be drawn. The default is False.
-#     plot_hazard : boolean, optional
-#         Specifies whether a plot of hazard rates shall be drawn. The default is False.
-# 
-#     Returns
-#     -------
-#     df : pandas dataframe
-#         fills the dataframe with survival / default probabilities, 
-#         hazard rates, marginal probability of default 
-#     '''
-# =============================================================================
-
 maturity = 5
 recovery = 0.4
 
