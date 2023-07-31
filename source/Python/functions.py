@@ -184,21 +184,35 @@ def loglinear_discount_factor(maturity, discount_factor, tenor):
         log-linearly interpolated discount factors, ACT/365 convention
 
     '''
-    
     max_time_index = len(maturity) - 1
+    lower_idx = np.searchsorted(maturity, tenor)
+    upper_idx = lower_idx + 1
+    df = []
     
-    # corner cases
-    if tenor == 0: df = 1.
-    if tenor > 0 and tenor < maturity[0]: df = discount_factor[0]
-    if tenor >= maturity[max_time_index]: df = discount_factor[max_time_index]
+    for t_idx, t_val in enumerate(tenor):
+        # corner cases
+        if t_val == 0: 
+            df.append(1.)
+            continue
         
-    # regular cases
-    for i in range(0, max_time_index):
-         if tenor >= maturity[i] and tenor < maturity[i+1]:
-            term1 = ((tenor-maturity[i])/(maturity[i+1] - maturity[i]))*log(discount_factor[i+1])
-            term2 = ((maturity[i+1]-tenor)/(maturity[i+1] - maturity[i]))*log(discount_factor[i])
-            ln_df = term1 + term2
-            df = exp(ln_df)
+        if t_val in maturity:
+            df.append(discount_factor[lower_idx[t_idx]])
+            continue
+        
+        if t_val > 0 and t_val < maturity[0]: 
+            df.append(discount_factor[0])
+            continue
+        
+        if t_val >= maturity[max_time_index]: 
+            df.append(discount_factor[max_time_index])
+            continue
+            
+        # regular cases
+        denominator =  maturity[upper_idx[t_idx]] - maturity[lower_idx[t_idx]]
+        term1  = ((t_val-maturity[lower_idx[t_idx]]) / denominator) * log(discount_factor[upper_idx[t_idx]])
+        term2 = ((maturity[upper_idx[t_idx]]-t_val) / denominator) * log(discount_factor[lower_idx[t_idx]])
+        ln_df = term1 + term2
+        df.append(exp(ln_df))
             
     return df
     
@@ -450,7 +464,8 @@ def sampling_gaussian_copula(sigma, dimension=5, power_of_two=7):
     distributed random variables.
     The sample size must be a power of two in order for 
     the Sobol sequence to keep its balance properties.
-    Sobol numbers are scrambled to avoid drawing exactly zero.
+    Sobol numbers are scrambled to avoid drawing exactly zero
+    and to avoid numerical division by zero problems. 
     
     Parameters
     ----------
@@ -499,7 +514,8 @@ def sampling_student_t_copula(sigma, nu, dimension=5, power_of_two=7):
     distributed random variables.
     The sample size must be a power of two in order for 
     the Sobol sequence to keep its balance properties.
-    Sobol numbers are scrambled to avoid drawing exactly zero.
+    Sobol numbers are scrambled to avoid drawing exactly zero
+    and to avoid numerical division by zero problems. 
     
     Parameters
     ----------
