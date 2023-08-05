@@ -117,7 +117,7 @@ df = loglinear_discount_factor(maturity, discount_factor, t)
 cds_df = pd.DataFrame({'Maturity' : t, 'prudential_spreads' : prud, 'bmw_spreads' : bmw, 'volkswagen_spreads' : vw, 'deutsche_bank' : db, 'kering' : ker, 'discount_factor': df})
 
 
-spreads_prudential = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.prudential_spreads, recovery)
+spreads_prudential = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.prudential_spreads, recovery, plot_prob=True, plot_hazard=False)
 
 
 
@@ -259,45 +259,47 @@ spreads_prudential = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, c
 # print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
 
 
-print('========================================================================') 
-print('***** TEST 11 ***** TEST DEFAULT LEG COMPUTATION ***** default_leg *****')
-print('========================================================================')
- 
-from functions import parse_interest_rate_curve, calc_default_leg
-
-# general input arguments
-
-expiry = 5 # in years
-recovery_rate = 0.4
-
-# get interest rate curve
-
-work_dir = os.getcwd()
-cur_dir = os.chdir('../..')  # move two directories up
-data_set = 'final_basket'
-data_set_directory = os.chdir("%s%s%s"%('data','/', data_set)) 
-interest_rate_curve = parse_interest_rate_curve(data_set_directory, 
-                                           'CDS_spreads_basket.xlsx', 
-                                           'TEST_CURVE', 
-                                           4, 
-                                           'B:E', 
-                                           ['Instr.Name', 'Close','START DATE','Mat.Dat'])
-
 # =============================================================================
-# print(' Case 1: All defaults occur after expiry')
-# default_times = np.array([9, 7, 6, 5.5, 8]) # all default times after expiry, unsorted
+# print('========================================================================') 
+# print('***** TEST 11 ***** TEST DEFAULT LEG COMPUTATION ***** default_leg *****')
+# print('========================================================================')
+#  
+# from functions import parse_interest_rate_curve, calc_default_leg
+# 
+# # general input arguments
+# 
+# expiry = 5 # in years
+# recovery_rate = 0.4
+# 
+# # get interest rate curve
+# 
+# work_dir = os.getcwd()
+# cur_dir = os.chdir('../..')  # move two directories up
+# data_set = 'final_basket'
+# data_set_directory = os.chdir("%s%s%s"%('data','/', data_set)) 
+# interest_rate_curve = parse_interest_rate_curve(data_set_directory, 
+#                                            'CDS_spreads_basket.xlsx', 
+#                                            'TEST_CURVE', 
+#                                            4, 
+#                                            'B:E', 
+#                                            ['Instr.Name', 'Close','START DATE','Mat.Dat'])
+# 
+# # =============================================================================
+# # print(' Case 1: All defaults occur after expiry')
+# # default_times = np.array([9, 7, 6, 5.5, 8]) # all default times after expiry, unsorted
+# # k = 2 # 2nd to default
+# # weights = [0.2, 0.2, 0.2, 0.2, 0.2] 
+# # pv_default_leg = calc_default_leg(expiry, default_times, recovery_rate, weights, k, interest_rate_curve)
+# # print(f'PV Default leg = pv_default_leg = {pv_default_leg}')
+# # =============================================================================
+# 
+# print(' Case 2: At least one default occurs before expiry')
+# default_times = np.array([9, 7, 3.2, 2.7, 1.49]) # at least one default occurs before expiry
 # k = 2 # 2nd to default
 # weights = [0.2, 0.2, 0.2, 0.2, 0.2] 
 # pv_default_leg = calc_default_leg(expiry, default_times, recovery_rate, weights, k, interest_rate_curve)
 # print(f'PV Default leg = pv_default_leg = {pv_default_leg}')
 # =============================================================================
-
-print(' Case 2: At least one default occurs before expiry')
-default_times = np.array([9, 7, 3.2, 2.7, 1.49]) # at least one default occurs before expiry
-k = 2 # 2nd to default
-weights = [0.2, 0.2, 0.2, 0.2, 0.2] 
-pv_default_leg = calc_default_leg(expiry, default_times, recovery_rate, weights, k, interest_rate_curve)
-print(f'PV Default leg = pv_default_leg = {pv_default_leg}')
 
 
 

@@ -14,7 +14,7 @@ from scipy.special import gamma
 # Student-t distribution functions
 from scipy.stats import t
 from scipy import stats 
-from scipy.stats import qmc # Sobol with direction numbers S. Joe and F. Y. Kuo
+from scipy.stats import qmc # Sobol with direction numbers from S. Joe and F. Y. Kuo
 from functools import reduce
 from datetime import timedelta, datetime
 from math import log, exp
@@ -155,7 +155,7 @@ def parse_pseudo_samples(data_set_directory_name, data_set_file_name, data_set_h
 
 def loglinear_discount_factor(maturity, discount_factor, tenor):
     '''
-    - does log-linear interpolation of discount factors 
+    - log-linear interpolation of discount factors 
     based on pillar point input argument discount_factor 
     and at tenors specified by input argument tenor
     - does flat extrapolation beyond the min and max CDS maturity times
@@ -183,23 +183,27 @@ def loglinear_discount_factor(maturity, discount_factor, tenor):
     
     for t_idx, t_val in enumerate(tenor):
         # corner cases
+        # for t_val equal to valuation date df is always 1
         if t_val == 0: 
             df.append(1.)
             continue
         
+        # t_val coincides with pillar time point
         if t_val in maturity:
             df.append(discount_factor[lower_idx[t_idx]])
             continue
         
+        # t_val before first pillar time point, set df to first discount factor (extrapolation near end)
         if t_val > 0 and t_val < maturity[0]: 
             df.append(discount_factor[0])
             continue
         
+        # t_val later than last pillar time point, set df to last available discount factor (extrapolation far end)
         if t_val >= maturity[max_time_index]: 
             df.append(discount_factor[max_time_index])
             continue
             
-        # regular cases
+        # regular case: interpolation
         denominator =  maturity[upper_idx[t_idx]] - maturity[lower_idx[t_idx]]
         term1  = ((t_val-maturity[lower_idx[t_idx]]) / denominator) * log(discount_factor[upper_idx[t_idx]])
         term2 = ((maturity[upper_idx[t_idx]]-t_val) / denominator) * log(discount_factor[lower_idx[t_idx]])
@@ -226,7 +230,7 @@ def cds_bootstrapper(maturity, discount_factor, spread, recovery, plot_prob=Fals
     recovery : float
         the assumed recovery rate, a float value between 0.0 and 1.0
     plot_prob : boolean, optional
-        Specifies whether a plot of survial shall be drawn. The default is False.
+        Specifies whether a plot of survival probabilities shall be drawn. The default is False.
     plot_hazard : boolean, optional
         Specifies whether a plot of hazard rates shall be drawn. The default is False.
 
@@ -282,17 +286,20 @@ def cds_bootstrapper(maturity, discount_factor, spread, recovery, plot_prob=Fals
     
     if plot_prob:
         # plot survival probability
-        df[['Survival', 'Default']].iplot(title='Survival vs Default Probability', 
+        df[['Survival', 'Default']].plot(title='Survival vs Default Probability', 
                                           xTitle='CDS Maturity', 
                                           yTitle='Survival Probability', 
                                           secondary_y = 'Default', 
                                           secondary_y_title='Default Probability')
+        plt.show()
+
         
     if plot_hazard:
         # plot survival probability
-        df['Hazard'].iplot(kind='bar', title='Term Structure of Hazard Rates', 
+        df['Hazard'].plot(kind='bar', title='Term Structure of Hazard Rates', 
                                           xTitle='CDS Maturity', 
                                           yTitle='Hazard Rates')
+        plt.show()
 
     return df
 
