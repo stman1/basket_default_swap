@@ -14,7 +14,7 @@ Created on Thu Jan 19 20:46:03 2023
 @author: Stefan Mangold
 """
 
-# Gaussian copula k-th to default credit basket
+# Spread calculation of a k-th to default credit basket swap with Gaussian copula
 
 # preliminaries
 
