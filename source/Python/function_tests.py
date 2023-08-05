@@ -94,11 +94,11 @@ sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
 #     cds_discount_factors[i] = loglinear_discount_factor(maturity, ir_data_frame['Discount Factor ACT360'], t[i])
 #       
 # print(f'discount factors: {cds_discount_factors}')
-#  
-#  
+
+
 
 print('===============================================================================')
-print('***** TEST 9 ***** TEST BOOTSTRAPPING HAZARD RATES ***** cds_bootstrapper *****')
+print('***** TEST 4 ***** TEST BOOTSTRAPPING HAZARD RATES ***** cds_bootstrapper *****')
 print('===============================================================================')
 from functions import cds_bootstrapper, loglinear_discount_factor
 
@@ -183,7 +183,9 @@ spreads_prudential = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, c
 # 
 # 
 # # TEST SAMPLING FROM GAUSSIAN COPULA
-# print(f'***** TEST 8 ***** TEST SAMPLING FROM GAUSSIAN COPULA *****  *****')
+# print('==========================================================================================')
+# print('***** TEST 8 ***** TEST SAMPLING FROM GAUSSIAN COPULA ***** sampling_gaussian_copula *****')
+# print('==========================================================================================')
 # from functions import sampling_gaussian_copula
 # 
 # # assign correlation matrix sigma
@@ -192,7 +194,6 @@ spreads_prudential = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, c
 # correlated_uniform_sample = sampling_gaussian_copula(correlation_matrix, dimension=5, power_of_two = 4)
 # 
 # print(f'Correlated uniform sample shape = {correlated_uniform_sample.shape}')
-# =============================================================================
 
 
 # print('============================================================================================')  
@@ -256,20 +257,6 @@ spreads_prudential = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, c
 # k = 2 # 2nd to default 
 # pv_premium_leg = calc_premium_leg(expiry, default_times, payment_frequency, k, interest_rate_curve)
 # print(f'PV Premium leg = pv_premium_leg = {pv_premium_leg}')
-# 
-# 
-# # default_times = np.array([9, 3.5, 6, 5.5, 8]) 
-# 
-# 
-# # 
-# # # assign correlation matrix sigma
-# # correlation_matrix = sigma_regular_dependence
-# # 
-# # correlated_uniform_sample = sampling_student_t_copula(correlation_matrix, 7, dimension=5, power_of_two = 4)
-# # 
-# # print(f'Correlated uniform sample shape = {correlated_uniform_sample.shape}')
-# # =============================================================================
-
 
 
 print('========================================================================') 
