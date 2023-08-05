@@ -82,17 +82,9 @@ def multivariate_random_normal(mu, sigma, num_simulations):
 
 
 
-
-#rng = np.random.default_rng(12345)
-#print(rng)
-
-#rfloat = rng.random(size=128)
-#print(rfloat)
-
-
 def parse_interest_rate_curve(data_set_dir, excel_file_name_, sheet_name_, header_offset, column_range, header_names):
     '''
-    parses quotes of market instruments from a data provider, computes first ACT365 zero rates 
+    parses quotes of interest rate market instruments from a data provider, computes first ACT365 zero rates 
     and then ACT360 discount factors based on the ACT365 zero rates
     
     methodology described here:
