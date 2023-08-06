@@ -114,11 +114,14 @@ ker = [13.28, 18.65, 24.05, 31.15, 38.24]
 maturity = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4., 4.25, 4.5, 4.75, 5.]
 discount_factor = [0.9925,	0.9851,	0.9778,	0.9704,	0.9632,	0.9560,	0.9489,	0.9418,	0.9347,	0.9277,	0.9208,	0.9139,	0.9071,	0.9003,	0.8936,	0.8869,	0.8803,	0.8737,	0.8672,	0.8607]
 df = loglinear_discount_factor(maturity, discount_factor, t)
-cds_df = pd.DataFrame({'Maturity' : t, 'prudential_spreads' : prud, 'bmw_spreads' : bmw, 'volkswagen_spreads' : vw, 'deutsche_bank' : db, 'kering' : ker, 'discount_factor': df})
+cds_df = pd.DataFrame({'Maturity' : t, 'prudential_spreads' : prud, 'bmw_spreads' : bmw, 'volkswagen_spreads' : vw, 'deutsche_bank_spreads' : db, 'kering_spreads' : ker, 'discount_factor': df})
 
 
-spreads_prudential = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.prudential_spreads, recovery, plot_prob=True, plot_hazard=False)
-
+spreads_prudential = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.prudential_spreads, recovery, plot_prob=False, plot_hazard=False)
+spreads_bmw = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.bmw_spreads, recovery, plot_prob=False, plot_hazard=False)
+spreads_vw = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.volkswagen_spreads, recovery, plot_prob=False, plot_hazard=False)
+spreads_db = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.deutsche_bank_spreads, recovery, plot_prob=False, plot_hazard=False)
+spreads_ker = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.kering_spreads, recovery, plot_prob=False, plot_hazard=False)
 
 
 
