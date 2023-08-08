@@ -275,8 +275,9 @@ def cds_bootstrapper(maturity, discount_factor, spread, recovery, plot_prob=Fals
 
             df.loc[i,'Survival'] = term1 + term2
             
-            if (df.loc[i,'Survival'] >= 0 and df.loc[i-1,'Survival'] >= 0):
-                df.loc[i, 'Hazard'] = -log(df.loc[i,'Survival']/df.loc[i-1,'Survival'])/df.loc[i,'Dt']
+            if df.loc[i,'Survival'] >= 0: 
+                if df.loc[i-1,'Survival'] >= 0:
+                    df.loc[i, 'Hazard'] = -log(df.loc[i,'Survival']/df.loc[i-1,'Survival'])/df.loc[i,'Dt']
     
     # derive probability of default
     df['Default'] = 1. - df['Survival']
@@ -302,6 +303,35 @@ def cds_bootstrapper(maturity, discount_factor, spread, recovery, plot_prob=Fals
         plt.show()
 
     return df
+
+def multi_cds_bootstrapper(spreads, discount_factors, recovery):
+    '''
+
+    Parameters
+    ----------
+    maturity : TYPE
+        DESCRIPTION.
+    discount_factor : TYPE
+        DESCRIPTION.
+    spreads : TYPE
+        DESCRIPTION.
+    recovery : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    bootstrap_dict : TYPE
+        DESCRIPTION.
+
+    '''
+    bootstrap_dict = {}
+    maturities = spreads['Maturity']
+    spreads = spreads.drop('Maturity', axis=1)
+    for name in spreads:    
+        bootstrap_dict[name] = cds_bootstrapper(maturities, discount_factors, spreads[name], recovery)
+    return bootstrap_dict
+                           
+                           
 
 def linearise_spearman_correlation_matrix(spearman_corr_matrix):
     '''
@@ -784,7 +814,12 @@ def calc_default_leg(expiry, default_times, recovery_rate, weights, k, interest_
     
     
     
+def uniform_2_default_time(uniform_samples, hazard_rates):
     
+    np_hazard_rates = hazard_rates[series1].values
+    lhs = np.abs(np.log(1.-uniform_samples)) < np_hazard_rates
+
+    return default_times    
     
     
     

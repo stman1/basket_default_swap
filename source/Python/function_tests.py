@@ -108,31 +108,43 @@ sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
 # t = [1, 2, 3, 4, 5]
 # t_new = [0, 0.125, 0.375, 0.55, 0.9, 5, 5.5]
 # prud = [29.5, 40.13, 50.6, 63.16, 74.18]
-# bmw = [28, 37.92, 47.09, 58.16, 70.2]
-# vw = [69.29, 81.66, 97, 111.93, 131.64]
-# db = [85.5, 91.32, 97, 103.49, 111.45]
-# ker = [13.28, 18.65, 24.05, 31.15, 38.24]
 # maturity = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4., 4.25, 4.5, 4.75, 5.]
 # discount_factor = [0.9925,	0.9851,	0.9778,	0.9704,	0.9632,	0.9560,	0.9489,	0.9418,	0.9347,	0.9277,	0.9208,	0.9139,	0.9071,	0.9003,	0.8936,	0.8869,	0.8803,	0.8737,	0.8672,	0.8607]
 # df = loglinear_discount_factor(maturity, discount_factor, t)
-# cds_df = pd.DataFrame({'Maturity' : t, 'prudential_spreads' : prud, 'bmw_spreads' : bmw, 'volkswagen_spreads' : vw, 'deutsche_bank_spreads' : db, 'kering_spreads' : ker, 'discount_factor': df})
-# 
+# cds_df = pd.DataFrame({'Maturity' : t, 'prudential_spreads' : prud, 'discount_factor': df})
 # 
 # spreads_prudential = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.prudential_spreads, recovery, plot_prob=False, plot_hazard=False)
-# spreads_bmw = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.bmw_spreads, recovery, plot_prob=False, plot_hazard=False)
-# spreads_vw = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.volkswagen_spreads, recovery, plot_prob=False, plot_hazard=False)
-# spreads_db = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.deutsche_bank_spreads, recovery, plot_prob=False, plot_hazard=False)
-# spreads_ker = cds_bootstrapper(cds_df.Maturity, cds_df.discount_factor, cds_df.kering_spreads, recovery, plot_prob=False, plot_hazard=False)
-# 
 # 
 # =============================================================================
 
+print('==================================================================================')
+print('***** TEST 5 ***** TEST MULTI-NAME BOOTSTRAPPER ***** multi_cds_bootstrapper *****')
+print('==================================================================================')
+from functions import cds_bootstrapper, loglinear_discount_factor, multi_cds_bootstrapper
 
+recovery = 0.4
+
+t = [1, 2, 3, 4, 5]
+t_new = [0, 0.125, 0.375, 0.55, 0.9, 5, 5.5]
+prud = [29.5, 40.13, 50.6, 63.16, 74.18]
+bmw = [28, 37.92, 47.09, 58.16, 70.2]
+vw = [69.29, 81.66, 97, 111.93, 131.64]
+db = [85.5, 91.32, 97, 103.49, 111.45]
+ker = [13.28, 18.65, 24.05, 31.15, 38.24]
+
+maturity = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4., 4.25, 4.5, 4.75, 5.]
+discount_factor = [0.9925,	0.9851,	0.9778,	0.9704,	0.9632,	0.9560,	0.9489,	0.9418,	0.9347,	0.9277,	0.9208,	0.9139,	0.9071,	0.9003,	0.8936,	0.8869,	0.8803,	0.8737,	0.8672,	0.8607]
+discount_factors = loglinear_discount_factor(maturity, discount_factor, t)
+# subsume into dataframe
+spreads = pd.DataFrame({'Maturity' : t, 'Prudential' : prud, 'BMW' : bmw, 'VW' : vw, 'DB' : db, 'Kering' : ker})
+
+
+df_bootstrap_results = multi_cds_bootstrapper(spreads, discount_factors, recovery)
 
 
 
 # print('=========================================================================================') 
-# print('***** TEST 5 ***** TEST STUDENT-T DENSITY CALCULATOR ***** student_t_copula_density *****')
+# print('***** TEST 6 ***** TEST STUDENT-T DENSITY CALCULATOR ***** student_t_copula_density *****')
 # print('=========================================================================================') 
 #
 # from functions import student_t_copula_density
@@ -159,7 +171,7 @@ sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
 # 
 
 # print('===========================================================================================================================================')  
-# print('***** TEST 6 ***** TEST STUDENT-T LOG LIKELIHOOD COMPUTATION FOR GIVEN DEGREE OF FREEDOM PARAMETER \nu  ***** student_t_loglikelihood *****')
+# print('***** TEST 7 ***** TEST STUDENT-T LOG LIKELIHOOD COMPUTATION FOR GIVEN DEGREE OF FREEDOM PARAMETER \nu  ***** student_t_loglikelihood *****')
 # print('===========================================================================================================================================') 
 #
 # from functions import student_t_loglikelihood
@@ -173,7 +185,7 @@ sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
 # 
 
 # print('===============================================================================================================================================')  
-# print('***** TEST 7 ***** TEST MAXIMUM LIKELIHOOD ESTIMATION OF DEGREE OF FREEDOM PARAMETER FOR STUDENT T ***** maximum_likelihood_student_t_dof *****')
+# print('***** TEST 8 ***** TEST MAXIMUM LIKELIHOOD ESTIMATION OF DEGREE OF FREEDOM PARAMETER FOR STUDENT T ***** maximum_likelihood_student_t_dof *****')
 # print('===============================================================================================================================================')  
 #
 # from functions import maximum_likelihood_student_t_dof
@@ -187,22 +199,21 @@ sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
 # print(f'maximum likelihood for dof parameter nu = {max_likelihood_nu}')
 # 
 
-# TEST SAMPLING FROM GAUSSIAN COPULA
-print('==========================================================================================')
-print('***** TEST 8 ***** TEST SAMPLING FROM GAUSSIAN COPULA ***** sampling_gaussian_copula *****')
-print('==========================================================================================')
-from functions import sampling_gaussian_copula
- 
-# assign correlation matrix sigma
-correlation_matrix = sigma_regular_dependence
- 
-correlated_uniform_sample = sampling_gaussian_copula(correlation_matrix, dimension=5, power_of_two = 4)
- 
-print(f'Correlated uniform sample shape = {correlated_uniform_sample.shape}')
-
+# print('==========================================================================================')
+# print('***** TEST 9 ***** TEST SAMPLING FROM GAUSSIAN COPULA ***** sampling_gaussian_copula *****')
+# print('==========================================================================================')
+# from functions import sampling_gaussian_copula
+#  
+# # assign correlation matrix sigma
+# correlation_matrix = sigma_regular_dependence
+#  
+# correlated_uniform_sample = sampling_gaussian_copula(correlation_matrix, dimension=5, power_of_two = 4)
+#  
+# print(f'Correlated uniform sample shape = {correlated_uniform_sample.shape}')
+# =============================================================================
 
 # print('============================================================================================')  
-# print('***** TEST 9 ***** TEST SAMPLING FROM STUDENT-T COPULA ***** sampling_student_t_copula *****')
+# print('***** TEST 10 ***** TEST SAMPLING FROM STUDENT-T COPULA ***** sampling_student_t_copula *****')
 # print('============================================================================================')  
 #
 # from functions import sampling_student_t_copula
@@ -217,7 +228,7 @@ print(f'Correlated uniform sample shape = {correlated_uniform_sample.shape}')
 
 
 # print('========================================================================') 
-# print('***** TEST 10 ***** TEST PREMIUM LEG COMPUTATION ***** premium_leg *****')
+# print('***** TEST 11 ***** TEST PREMIUM LEG COMPUTATION ***** premium_leg *****')
 # print('========================================================================') 
 #
 # from functions import parse_interest_rate_curve, calc_premium_leg
@@ -266,7 +277,7 @@ print(f'Correlated uniform sample shape = {correlated_uniform_sample.shape}')
 
 # =============================================================================
 # print('========================================================================') 
-# print('***** TEST 11 ***** TEST DEFAULT LEG COMPUTATION ***** default_leg *****')
+# print('***** TEST 12 ***** TEST DEFAULT LEG COMPUTATION ***** default_leg *****')
 # print('========================================================================')
 #  
 # from functions import parse_interest_rate_curve, calc_default_leg
@@ -305,6 +316,40 @@ print(f'Correlated uniform sample shape = {correlated_uniform_sample.shape}')
 # pv_default_leg = calc_default_leg(expiry, default_times, recovery_rate, weights, k, interest_rate_curve)
 # print(f'PV Default leg = pv_default_leg = {pv_default_leg}')
 # =============================================================================
+
+
+print('=====================================================================================================') 
+print('***** TEST 13 ***** TEST UNIFORM SAMPLE TO DEFAULT TIME CONVERSION ***** uniform_2_default_time *****')
+print('=====================================================================================================')
+  
+from functions import sampling_gaussian_copula, uniform_2_default_time, cds_bootstrapper, loglinear_discount_factor, multi_cds_bootstrapper
+ 
+# 1 Get correlated uniform samples
+
+correlation_matrix = sigma_regular_dependence 
+correlated_uniform_sample = sampling_gaussian_copula(correlation_matrix, dimension=5, power_of_two = 4)
+print(f'Sample shape correlated uniforms  = {correlated_uniform_sample.shape}')
+
+# 2 Get hazard rates
+
+recovery = 0.4
+
+t = [1, 2, 3, 4, 5]
+t_new = [0, 0.125, 0.375, 0.55, 0.9, 5, 5.5]
+prud = [29.5, 40.13, 50.6, 63.16, 74.18]
+bmw = [28, 37.92, 47.09, 58.16, 70.2]
+vw = [69.29, 81.66, 97, 111.93, 131.64]
+db = [85.5, 91.32, 97, 103.49, 111.45]
+ker = [13.28, 18.65, 24.05, 31.15, 38.24]
+
+maturity = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4., 4.25, 4.5, 4.75, 5.]
+discount_factor = [0.9925,	0.9851,	0.9778,	0.9704,	0.9632,	0.9560,	0.9489,	0.9418,	0.9347,	0.9277,	0.9208,	0.9139,	0.9071,	0.9003,	0.8936,	0.8869,	0.8803,	0.8737,	0.8672,	0.8607]
+discount_factors = loglinear_discount_factor(maturity, discount_factor, t)
+# subsume into dataframe
+spreads = pd.DataFrame({'Maturity' : t, 'Prudential' : prud, 'BMW' : bmw, 'VW' : vw, 'DB' : db, 'Kering' : ker})
+
+df_bootstrap_results = multi_cds_bootstrapper(spreads, discount_factors, recovery)
+
 
 
 
