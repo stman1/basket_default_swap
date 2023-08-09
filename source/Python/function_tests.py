@@ -117,30 +117,32 @@ sigma_irregular_dependence = np.array([[1., 0.8, 0.6, 0.4, 0.2],
 # 
 # =============================================================================
 
-print('==================================================================================')
-print('***** TEST 5 ***** TEST MULTI-NAME BOOTSTRAPPER ***** multi_cds_bootstrapper *****')
-print('==================================================================================')
-from functions import cds_bootstrapper, loglinear_discount_factor, multi_cds_bootstrapper
-
-recovery = 0.4
-
-t = [1, 2, 3, 4, 5]
-t_new = [0, 0.125, 0.375, 0.55, 0.9, 5, 5.5]
-prud = [29.5, 40.13, 50.6, 63.16, 74.18]
-bmw = [28, 37.92, 47.09, 58.16, 70.2]
-vw = [69.29, 81.66, 97, 111.93, 131.64]
-db = [85.5, 91.32, 97, 103.49, 111.45]
-ker = [13.28, 18.65, 24.05, 31.15, 38.24]
-
-maturity = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4., 4.25, 4.5, 4.75, 5.]
-discount_factor = [0.9925,	0.9851,	0.9778,	0.9704,	0.9632,	0.9560,	0.9489,	0.9418,	0.9347,	0.9277,	0.9208,	0.9139,	0.9071,	0.9003,	0.8936,	0.8869,	0.8803,	0.8737,	0.8672,	0.8607]
-discount_factors = loglinear_discount_factor(maturity, discount_factor, t)
-# subsume into dataframe
-spreads = pd.DataFrame({'Maturity' : t, 'Prudential' : prud, 'BMW' : bmw, 'VW' : vw, 'DB' : db, 'Kering' : ker})
-
-
-df_bootstrap_results = multi_cds_bootstrapper(spreads, discount_factors, recovery)
-
+# =============================================================================
+# print('==================================================================================')
+# print('***** TEST 5 ***** TEST MULTI-NAME BOOTSTRAPPER ***** multi_cds_bootstrapper *****')
+# print('==================================================================================')
+# from functions import cds_bootstrapper, loglinear_discount_factor, multi_cds_bootstrapper
+# 
+# recovery = 0.4
+# 
+# t = [1, 2, 3, 4, 5]
+# t_new = [0, 0.125, 0.375, 0.55, 0.9, 5, 5.5]
+# prud = [29.5, 40.13, 50.6, 63.16, 74.18]
+# bmw = [28, 37.92, 47.09, 58.16, 70.2]
+# vw = [69.29, 81.66, 97, 111.93, 131.64]
+# db = [85.5, 91.32, 97, 103.49, 111.45]
+# ker = [13.28, 18.65, 24.05, 31.15, 38.24]
+# 
+# maturity = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2., 2.25, 2.5, 2.75, 3., 3.25, 3.5, 3.75, 4., 4.25, 4.5, 4.75, 5.]
+# discount_factor = [0.9925,	0.9851,	0.9778,	0.9704,	0.9632,	0.9560,	0.9489,	0.9418,	0.9347,	0.9277,	0.9208,	0.9139,	0.9071,	0.9003,	0.8936,	0.8869,	0.8803,	0.8737,	0.8672,	0.8607]
+# discount_factors = loglinear_discount_factor(maturity, discount_factor, t)
+# # subsume into dataframe
+# spreads = pd.DataFrame({'Maturity' : t, 'Prudential' : prud, 'BMW' : bmw, 'VW' : vw, 'DB' : db, 'Kering' : ker})
+# 
+# 
+# df_bootstrap_results = multi_cds_bootstrapper(spreads, discount_factors, recovery)
+# 
+# =============================================================================
 
 
 # print('=========================================================================================') 
@@ -349,6 +351,16 @@ discount_factors = loglinear_discount_factor(maturity, discount_factor, t)
 spreads = pd.DataFrame({'Maturity' : t, 'Prudential' : prud, 'BMW' : bmw, 'VW' : vw, 'DB' : db, 'Kering' : ker})
 
 df_bootstrap_results = multi_cds_bootstrapper(spreads, discount_factors, recovery)
+
+# 3 
+
+cumulative_hazard_rates = pd.DataFrame({'Maturity' : t, 
+                                        'Prudential' : df_bootstrap_results['Prudential']['Hazard'].values.cumsum(), 
+                                        'BMW' : df_bootstrap_results['BMW']['Hazard'].values.cumsum(), 
+                                        'VW' : df_bootstrap_results['VW']['Hazard'].values.cumsum(), 
+                                        'DB' : df_bootstrap_results['DB']['Hazard'].values.cumsum(), 
+                                        'Kering' : df_bootstrap_results['Kering']['Hazard'].values.cumsum()})
+
 
 
 
