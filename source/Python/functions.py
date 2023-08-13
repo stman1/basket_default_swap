@@ -818,20 +818,23 @@ def uniform_2_default_time(uniform_samples, cumulative_hazard_rates):
     
     
     maturity = cumulative_hazard_rates.iloc[:,0 ]
-    names = cumulative_hazard_rates.iloc[:, 1:]
+    cum_hazard_rates = cumulative_hazard_rates.iloc[:, 1:]
     
-    transformed_sample = np.abs(np.log(1.-uniform_samples))
-    default_times = np.zeros(transformed_sample.shape)
+    transformed_samples = np.abs(np.log(1.-uniform_samples))
+    default_times = np.zeros(transformed_samples.shape)
     
               
-    names = names.values.transpose()      
+    cum_hazard_rates = cum_hazard_rates.values.transpose()      
        
-    for names_row_idx, names_row in enumerate(names):             
-        for row_idx, row in enumerate(transformed_sample):
-            for col_idx, col in enumerate(row):
-                if col <= names_row[col_idx]:
-                    default_times[row_idx, col_idx] =  col_idx   
-
+    
+    for col_idx, col in enumerate(transformed_samples.T): # iterate over names (i.e. columns of sample)
+        for row_idx, one_sample in enumerate(col):
+            for hazard_idx, hazard_rate in enumerate(cum_hazard_rates[col_idx]):
+                if one_sample <= hazard_rate:
+                    default_times[row_idx, col_idx] = hazard_idx-1
+                    break
+            
+            
     return default_times    
     
     
