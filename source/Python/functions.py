@@ -814,10 +814,23 @@ def calc_default_leg(expiry, default_times, recovery_rate, weights, k, interest_
     
     
     
-def uniform_2_default_time(uniform_samples, hazard_rates):
+def uniform_2_default_time(uniform_samples, cumulative_hazard_rates):
     
-    np_hazard_rates = hazard_rates[series1].values
-    lhs = np.abs(np.log(1.-uniform_samples)) < np_hazard_rates
+    
+    maturity = cumulative_hazard_rates.iloc[:,0 ]
+    names = cumulative_hazard_rates.iloc[:, 1:]
+    
+    transformed_sample = np.abs(np.log(1.-uniform_samples))
+    default_times = np.zeros(transformed_sample.shape)
+    
+              
+    names = names.values.transpose()      
+       
+    for names_row_idx, names_row in enumerate(names):             
+        for row_idx, row in enumerate(transformed_sample):
+            for col_idx, col in enumerate(row):
+                if col <= names_row[col_idx]:
+                    default_times[row_idx, col_idx] =  col_idx   
 
     return default_times    
     

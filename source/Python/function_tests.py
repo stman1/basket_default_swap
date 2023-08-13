@@ -352,7 +352,7 @@ spreads = pd.DataFrame({'Maturity' : t, 'Prudential' : prud, 'BMW' : bmw, 'VW' :
 
 df_bootstrap_results = multi_cds_bootstrapper(spreads, discount_factors, recovery)
 
-# 3 
+# 3 Prepare hazard rate data structure 
 
 cumulative_hazard_rates = pd.DataFrame({'Maturity' : t, 
                                         'Prudential' : df_bootstrap_results['Prudential']['Hazard'].values.cumsum(), 
@@ -360,6 +360,10 @@ cumulative_hazard_rates = pd.DataFrame({'Maturity' : t,
                                         'VW' : df_bootstrap_results['VW']['Hazard'].values.cumsum(), 
                                         'DB' : df_bootstrap_results['DB']['Hazard'].values.cumsum(), 
                                         'Kering' : df_bootstrap_results['Kering']['Hazard'].values.cumsum()})
+
+# 4 calculate default_times
+
+default_times = uniform_2_default_time(correlated_uniform_sample, cumulative_hazard_rates)
 
 
 
